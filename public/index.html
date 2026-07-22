@@ -72,14 +72,9 @@
 <div style="display:flex; min-height:100vh;">
     <!-- Sidebar -->
     <aside class="sidebar" style="width:232px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:18px 14px;">
-        <div style="display:flex; align-items:center; gap:9px; margin-bottom:24px; padding:0 6px;">
-            <div style="width:34px; height:34px; border-radius:9px; background:var(--accent); display:flex; align-items:center; justify-content:center;">
-                <span class="material-symbols-outlined" style="font-size:22px; color:var(--ink);">bolt</span>
-            </div>
-            <div>
-                <div style="font-weight:800; font-size:15px; line-height:1;">Blinkit</div>
-                <div style="font-size:10px; color:var(--muted);">Discovery Engine</div>
-            </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-start; margin-bottom:22px; padding:0 4px;">
+            <img src="blinkit-logo.svg" alt="blinkit" style="width:108px; height:108px; border-radius:22px; display:block; box-shadow:0 2px 8px rgba(17,17,17,0.10);">
+            <div style="font-size:11px; font-weight:700; color:var(--ink-2); margin-top:9px; letter-spacing:.02em;">PM Discovery Engine</div>
         </div>
         <nav style="display:flex; flex-direction:column; gap:2px; font-size:13.5px;">
             <a href="#ai-query" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--ink); background:var(--warn-bg); font-weight:700; text-decoration:none;"><span class="material-symbols-outlined" style="font-size:19px; color:var(--accent-ink);">smart_toy</span> AI Insights Query</a>
@@ -102,9 +97,12 @@
     <!-- Report canvas -->
     <main style="flex:1; min-width:0; overflow-x:hidden; padding:20px 24px; max-width:1440px;">
         <header style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
-            <div>
-                <h1 style="font-size:20px; font-weight:800; margin:0;">AI Review Analysis &amp; Discovery Engine</h1>
-                <p style="font-size:12.5px; color:var(--muted); margin:3px 0 0;">Cross-Category Adoption · Trial Confidence Layer · Growth PM case study</p>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="blinkit-logo.svg" alt="blinkit" style="width:44px; height:44px; border-radius:11px; flex-shrink:0;">
+                <div>
+                    <h1 style="font-size:20px; font-weight:800; margin:0;">AI Review Analysis &amp; Discovery Engine</h1>
+                    <p style="font-size:12.5px; color:var(--muted); margin:3px 0 0;">Cross-Category Adoption · Trial Confidence Layer · Growth PM case study</p>
+                </div>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
                 <button onclick="openArchModal()" style="display:flex; align-items:center; gap:7px; background:var(--ink); color:#fff; border:none; border-radius:10px; padding:9px 14px; font-size:12.5px; font-weight:700;">

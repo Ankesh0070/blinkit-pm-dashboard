@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" role="img" aria-label="blinkit — India's Last Minute App">
+  <rect width="360" height="360" rx="64" fill="#F5CE47"/>
+  <text x="180" y="196" text-anchor="middle"
+        font-family="system-ui, 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="86" letter-spacing="-3">
+    <tspan fill="#1c1c1a">blink</tspan><tspan fill="#3AA636">it</tspan>
+  </text>
+  <text x="180" y="240" text-anchor="middle"
+        font-family="system-ui, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="25" fill="#2b2b2b">India&#8217;s Last Minute App</text>
+</svg>
