@@ -35,6 +35,20 @@ app.use('/data-snapshot', express.static(path.join(__dirname, 'data')));
 // cases/mitigations) so it answers PM questions about THIS project accurately
 // instead of generic e-commerce platitudes.
 // ---------------------------------------------------------------------------
+
+// All 22 languages of the Eighth Schedule of the Indian Constitution, with the
+// correct native/customary script noted so the model doesn't default to the
+// wrong one. Same list the main Blinkit app's chatbot uses.
+const INDIAN_LANGUAGES = [
+    'Hindi (Devanagari)', 'Bengali (Bengali script)', 'Marathi (Devanagari)', 'Telugu (Telugu script)',
+    'Tamil (Tamil script)', 'Gujarati (Gujarati script)', 'Urdu (Perso-Arabic/Nastaliq script)',
+    'Kannada (Kannada script)', 'Odia (Odia script)', 'Malayalam (Malayalam script)', 'Punjabi (Gurmukhi script)',
+    'Assamese (Bengali-Assamese script)', 'Maithili (Devanagari)', 'Sanskrit (Devanagari)',
+    'Nepali (Devanagari)', 'Konkani (Devanagari)', 'Sindhi (Devanagari or Perso-Arabic)',
+    'Dogri (Devanagari)', 'Kashmiri (Perso-Arabic or Devanagari)', 'Manipuri/Meitei (Meitei Mayek or Bengali script)',
+    'Santali (Ol Chiki script, or Devanagari/Bengali when the user types it that way)', 'Bodo (Devanagari)'
+];
+
 const PM_KNOWLEDGE = `
 PROJECT: Blinkit Cross-Category Adoption — "Trial Confidence Layer" (Growth PM graduation project)
 
@@ -91,7 +105,9 @@ function buildPmSystemPrompt(dataFacts) {
 
     return (
         "You are the Growth-PM analytics assistant for the Blinkit 'Trial Confidence Layer' graduation project — a separate, standalone Power-BI-style dashboard companion to the main prototype app. Your job is to help a Product Manager (or evaluator/professor) understand the project's strategy, metrics, architecture, and rationale by answering questions grounded in the actual project documentation below. Do not invent facts, numbers, or decisions that aren't in this knowledge base or the supplied data — if you don't know, say so plainly rather than guessing.\n\n" +
-        "LANGUAGE RULE: Detect the language/script of the user's latest message (English, Hindi, Hinglish, or any other Indian language) and reply in that same language/script. If Hinglish (Roman script), reply in Hinglish too.\n\n" +
+        "LANGUAGE RULE (critical, apply before anything else): Detect the language and script of the user's LATEST message and reply ONLY in that same language and script, using its correct native script — never transliterate into Devanagari or Latin unless the user did. If the user writes in ENGLISH, reply in English. You must support all 22 languages of the Eighth Schedule of the Indian Constitution:\n" +
+        INDIAN_LANGUAGES.map(l => `- ${l}`).join('\n') + '\n' +
+        "Plus English, and any other Indian regional language the user writes in. Give a genuine best effort in the exact language/dialect used, including lower-resource ones (Bodo, Dogri, Maithili, Konkani, Sanskrit, Santali, Manipuri, Sindhi, Kashmiri) — do not silently fall back to Hindi/Marathi just because a script looks similar. If the user writes Hinglish (Hindi/regional words in Roman letters, e.g. 'CCAR kya hota hai'), reply in Hinglish using Roman script — but do NOT default to Hinglish for an English or other-language question. Never reply in a different language than the user used. All PM terminology (CCAR, L2 category, guardrail, etc.) may stay in English inside the reply even when the surrounding text is another language, since these are proper technical terms.\n\n" +
         "STYLE: Answer like a sharp, concise PM — 2-5 sentences typically, more only if the question genuinely needs a breakdown (e.g. listing all phases). Use the exact terminology from the knowledge base (CCAR, L2 category, 90-day lookback, confidence gate, diversity monitor, etc.) rather than generic business-speak. When relevant, cite the specific pattern/phase/edge-case by name (e.g. 'per Pattern A, first-experience determinism...').\n\n" +
         PM_KNOWLEDGE + "\n\n" + factsBlock + "\n\n" +
         "Respond with ONLY a JSON object, no markdown fences, no extra commentary, in this exact shape:\n" +
