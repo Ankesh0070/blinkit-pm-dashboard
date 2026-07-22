@@ -1,0 +1,47 @@
+{
+  "lookback_window_days": 90,
+  "users": {
+    "user_a": {
+      "user_id": "user_a",
+      "persona": "Cold Start (Grocery Loyalist)",
+      "total_orders_90d": 34,
+      "categories_purchased_90d": ["groceries_fresh", "snacks_beverages", "dairy"],
+      "last_non_grocery_purchase": null,
+      "is_ccar_active": false,
+      "diversity_ratio": {
+        "novel_categories_shown": 0,
+        "novel_categories_clicked": 0
+      }
+    },
+    "user_b": {
+      "user_id": "user_b",
+      "persona": "Electronics Explorer",
+      "total_orders_90d": 12,
+      "categories_purchased_90d": ["groceries_fresh", "electronics"],
+      "last_non_grocery_purchase": {
+        "category": "electronics",
+        "days_ago": 15
+      },
+      "is_ccar_active": true,
+      "diversity_ratio": {
+        "novel_categories_shown": 2,
+        "novel_categories_clicked": 1
+      }
+    },
+    "user_c": {
+      "user_id": "user_c",
+      "persona": "Dormant Buyer (Out of Window)",
+      "total_orders_90d": 8,
+      "categories_purchased_90d": ["groceries_fresh"],
+      "last_non_grocery_purchase": {
+        "category": "personal_care_beauty",
+        "days_ago": 120
+      },
+      "is_ccar_active": false,
+      "diversity_ratio": {
+        "novel_categories_shown": 0,
+        "novel_categories_clicked": 0
+      }
+    }
+  }
+}

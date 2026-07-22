@@ -1,0 +1,23 @@
+{
+  "kpis": [
+    { "id": "ccar", "label": "Cross-Category Activation Rate", "sublabel": "North Star · % of MAC buying a new L2 category", "value": "1.8%", "trend": 22.1, "icon": "workspace_premium", "star": true },
+    { "id": "trial_rate", "label": "New-Category Trial Rate", "sublabel": "cart adds / MAC", "value": "6.4%", "trend": 3.1, "icon": "add_shopping_cart", "star": false },
+    { "id": "second_purchase", "label": "Second-Purchase Rate", "sublabel": "repeat within 30 days · the real test", "value": "41%", "trend": 5.0, "icon": "replay", "star": false },
+    { "id": "diversity", "label": "Recommendation Diversity", "sublabel": "novel shown : accepted · target 3.0:1", "value": "3.5:1", "trend": null, "icon": "hub", "star": false }
+  ],
+  "guardrails": [
+    { "label": "Grocery Completion", "value": "98.6%", "status": "ok", "note": "core habit loop protected" },
+    { "label": "Time to Checkout", "value": "34s", "status": "ok", "note": "no degradation" },
+    { "label": "Return / Complaint Rate", "value": "4.2%", "status": "ok", "note": "newly-trialled categories" }
+  ],
+  "abandonment_alert_threshold": 25,
+  "category_abandonment": [
+    { "id": "electronics", "name": "Electronics", "emoji": "🔌", "value": 14 },
+    { "id": "personal_care_beauty", "name": "Beauty & Personal Care", "emoji": "💄", "value": 8 },
+    { "id": "pharmacy_health", "name": "Pharmacy & Health", "emoji": "💊", "value": 11 },
+    { "id": "baby", "name": "Baby Care", "emoji": "🧸", "value": 30 },
+    { "id": "home_cleaning", "name": "Home & Cleaning", "emoji": "🧹", "value": 9 },
+    { "id": "pet", "name": "Pet Care", "emoji": "🐕", "value": 12 },
+    { "id": "intimate_personal", "name": "Intimate Care", "emoji": "🛡️", "value": 7 }
+  ]
+}

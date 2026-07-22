@@ -1,0 +1,127 @@
+{
+  "generated_at": "2026-07-19T09:00:00+05:30",
+  "source": "category_coverage.csv",
+  "density_threshold": 50,
+  "categories": {
+    "groceries_fresh": {
+      "mentions": 1114,
+      "pct_of_corpus": 3.4,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "not_targeted",
+      "note": "Core category — not part of cross-category expansion"
+    },
+    "snacks_beverages": {
+      "mentions": 659,
+      "pct_of_corpus": 2,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "not_targeted",
+      "note": "Core category — not part of cross-category expansion"
+    },
+    "electronics": {
+      "mentions": 509,
+      "pct_of_corpus": 1.5,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "phase1_and_phase2",
+      "note": "Densest non-grocery category. Phase 1 launch category, continues in Phase 2 with automated pipeline."
+    },
+    "personal_care_beauty": {
+      "mentions": 233,
+      "pct_of_corpus": 0.7,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "phase2",
+      "note": "Second-densest non-grocery category. New in Phase 2."
+    },
+    "pharmacy_health": {
+      "mentions": 152,
+      "pct_of_corpus": 0.5,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "phase2",
+      "note": "Third-densest non-grocery category. New in Phase 2. CAVEAT: adoption barriers may include medical trust, not just peer evidence (per EdgeCases.md)."
+    },
+    "baby": {
+      "mentions": 41,
+      "pct_of_corpus": 0.1,
+      "density_flag": "sparse",
+      "eligible_for_ai_signals": true,
+      "phase": "phase4",
+      "note": "Below density threshold. Overridden to TRUE for Phase 4 inverted-root-cause testing."
+    },
+    "home_cleaning": {
+      "mentions": 32,
+      "pct_of_corpus": 0.1,
+      "density_flag": "sparse",
+      "eligible_for_ai_signals": true,
+      "phase": "phase5",
+      "note": "Phase 5 full catalog scale-out. Override to TRUE."
+    },
+    "pet": {
+      "mentions": 23,
+      "pct_of_corpus": 0.1,
+      "density_flag": "sparse",
+      "eligible_for_ai_signals": true,
+      "phase": "phase5",
+      "note": "Phase 5 full catalog scale-out. Override to TRUE."
+    },
+    "intimate_personal": {
+      "mentions": 21,
+      "pct_of_corpus": 0.1,
+      "density_flag": "sparse",
+      "eligible_for_ai_signals": true,
+      "phase": "phase5",
+      "note": "Phase 5 full catalog scale-out. Override to TRUE."
+    },
+    "books": {
+      "mentions": 180,
+      "pct_of_corpus": 0.53,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "phase5_expansion",
+      "note": "New Phase 5 expansion category with automated trust pipeline."
+    },
+    "jewellery": {
+      "mentions": 150,
+      "pct_of_corpus": 0.44,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "phase5_expansion",
+      "note": "New Phase 5 expansion category with automated trust pipeline."
+    },
+    "spiritual": {
+      "mentions": 130,
+      "pct_of_corpus": 0.38,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "phase5_expansion",
+      "note": "New Phase 5 expansion category with automated trust pipeline."
+    },
+    "stationery_games": {
+      "mentions": 165,
+      "pct_of_corpus": 0.49,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "phase5_expansion",
+      "note": "New Phase 5 expansion category with automated trust pipeline."
+    },
+    "supplements": {
+      "mentions": 210,
+      "pct_of_corpus": 0.62,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "phase5_expansion",
+      "note": "New Phase 5 expansion category with automated trust pipeline."
+    },
+    "sports_outdoor": {
+      "mentions": 145,
+      "pct_of_corpus": 0.43,
+      "density_flag": "dense",
+      "eligible_for_ai_signals": true,
+      "phase": "phase5_expansion",
+      "note": "New Phase 5 expansion category with automated trust pipeline."
+    }
+  }
+}
