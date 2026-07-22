@@ -1,504 +1,322 @@
 // ============================================================================
-// Blinkit AI Review Analysis & Discovery Engine — data + interactions
-// Live-first / snapshot-fallback data, plus the AI Discovery synthesis layer
-// grounded in the project's real research corpus & interviews.
+// Blinkit PM Analytics Control Center — dark console
+// KPIs · AI NL query simulator · friction heatmap · MVP bridge · pipeline modal
 // ============================================================================
-const LIVE_BASE = 'https://blinkit-trial-confidence-layer.vercel.app';
-const FILES = ['dashboard_metrics', 'trust_signals_automated', 'user_profiles', 'category_density_flags'];
-let DATA = {}, SOURCES = {};
-
-// palette
 const C = {
-    ink: '#111111', ink2: '#45454a', muted: '#85858c', grid: '#e8e7e2', baseline: '#c3c2b7',
-    accent: '#F2C94C', accentInk: '#7a5b00',
-    s: ['#2a78d6', '#008300', '#e87ba4', '#eda100', '#1baf7a', '#eb6834', '#4a3aa7', '#e34948'],
-    good: '#12923a', warn: '#c98a00', crit: '#c62828', track: '#ececE6'
+  accent:'#F2C94C', text:'#F1F5F9', text2:'#CBD5E1', muted:'#94A3B8', faint:'#64748B',
+  emerald:'#10B981', rose:'#F43F5E', amber:'#F59E0B', blue:'#3B82F6',
+  surface:'#1E293B', border:'rgba(148,163,184,0.18)'
 };
+const PROTO = 'https://blinkit-trial-confidence-layer.vercel.app';
 
-Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", sans-serif';
-Chart.defaults.font.size = 11.5;
-Chart.defaults.color = C.ink2;
-Chart.defaults.plugins.legend.labels.usePointStyle = true;
-Chart.defaults.plugins.legend.labels.boxWidth = 8;
-Chart.defaults.plugins.legend.labels.boxHeight = 8;
-Chart.defaults.plugins.legend.labels.padding = 12;
-const charts = {};
+// ---------- Lucide icons (inline SVG) ----------
+const IP = {
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  sparkles:'<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/>',
+  bolt:'<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+  msg:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>',
+  alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4M12 17h.01"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  trend:'<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>',
+  layers:'<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/>',
+  rocket:'<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+  cpu:'<rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/>',
+  chev:'<path d="m6 9 6 6 6-6"/>', close:'<path d="M18 6 6 18M6 6l12 12"/>',
+  quote:'<path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h3a2 2 0 0 1-2 2 1 1 0 0 0 0 2 4 4 0 0 0 4-4V5a2 2 0 0 0-2-2z"/><path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h3a2 2 0 0 1-2 2 1 1 0 0 0 0 2 4 4 0 0 0 4-4V5a2 2 0 0 0-2-2z"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>', arrow:'<path d="M5 12h14M12 5l7 7-7 7"/>', ext:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  bulb:'<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/>',
+  db:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+  brain:'<path d="M12 5a3 3 0 1 0-5.997.142 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.142 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>',
+  branch:'<line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
+  verify:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/>',
+  grid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>'
+};
+function icon(n, s = 18, w = 2) { return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IP[n]}</svg>`; }
 
 // ============================================================================
-// CASE-STUDY CONFIG (assignment-specific goal metrics)
+// DATA
 // ============================================================================
-const CORE_METRICS = [
-    { icon: 'hub', label: 'Cross-Category MAU Adoption Rate', sub: '% of MAU buying ≥1 new category / month', value: 14.2, target: 25, unit: '%', trend: 3.4, goodUp: true, star: true },
-    { icon: 'trending_down', label: 'Category Trial Drop-off Rate', sub: 'first trials that never repeat', value: 42, unit: '%', trend: -2.1, goodUp: false, star: false },
-    { icon: 'shopping_cart_checkout', label: 'Cart Abandonment Rate', sub: 'guardrail — core funnel must stay stable', value: 21.5, unit: '%', trend: 0.4, goodUp: false, star: false, guardrail: true }
+const KPIS = [
+  { icon:'msg',   label:'Total Reviews Analyzed', value:'5,420', sub:'Play Store &amp; App Store', color:C.blue,    bar:null },
+  { icon:'alert', label:'Cross-Category Friction Score', value:'74%', sub:'High hesitation · Personal Care', color:C.rose, bar:74 },
+  { icon:'target',label:'Top Friction Root Cause', value:'Price &amp; Pack-Size Uncertainty', valueSize:20, sub:'dominant negative cluster', color:C.amber, bar:null },
+  { icon:'trend', label:'Predicted Trial Conversion Lift', value:'+28%', sub:'with Micro-Trial &lt; ₹30', color:C.emerald, bar:28, barMax:50 }
 ];
 
-const FRICTION = [
-    { cat: 'Groceries', level: 'Low', score: 16, note: 'Habitual lane — trusted, high repeat' },
-    { cat: 'Snacks & Beverages', level: 'Low', score: 23, note: 'Impulse-friendly, low perceived risk' },
-    { cat: 'Personal Care & Beauty', level: 'Medium', score: 54, note: 'Shade / skin-type / quality-match doubt' },
-    { cat: 'Electronics', level: 'Medium', score: 58, note: 'One bad trial is terminal (R5)' },
-    { cat: 'Baby Care', level: 'High', score: 77, note: 'Safety + limited-range distrust (R4)' },
-    { cat: 'Pet Care', level: 'High', score: 80, note: 'Sparse peer proof, high stakes (23 mentions)' }
+const CLUSTERS = [
+  { name:'Sizing Risk', pct:42, color:C.rose,  quote:"Don't want to buy a 100ml serum without knowing if it suits my skin." },
+  { name:'Price Barrier', pct:31, color:C.amber, quote:"₹500 for a new brand on 10-min delivery is too expensive to gamble." },
+  { name:'Return Fear', pct:18, color:C.blue,  quote:"What if it arrives damaged or expired?" }
 ];
-const frictionColor = lvl => lvl === 'Low' ? C.good : lvl === 'Medium' ? C.warn : C.crit;
-const frictionBg = lvl => lvl === 'Low' ? 'var(--good-bg)' : lvl === 'Medium' ? 'var(--warn-bg)' : 'var(--crit-bg)';
 
-// AI pipeline steps (Feature 2 modal)
+const QUERY_KB = [
+  {
+    id:'skincare', kw:['skincare','skin','personal care','beauty','grocery user','serum','cosmetic'],
+    title:'Why grocery-only users avoid Skincare',
+    sentiment:{ neg:74, neu:18, pos:8 },
+    keywords:['size hesitation','skin-match doubt','no peer reviews','₹500 risk','specialist apps'],
+    quotes:[
+      { text:"I want good reviews on the specific product I'm considering — not generic suggestions.", src:'R1 · User Interview' },
+      { text:"Without a friend or family recommendation I won't trust a new category enough to try it.", src:'R4 · User Interview' }
+    ],
+    insight:'Grocery-only buyers avoid Skincare on <b>size &amp; price hesitation</b> plus a peer-proof vacuum. A &lt;₹30 micro-trial with verified reviews removes the purchase risk.'
+  },
+  {
+    id:'complaints', kw:['complaint','complaints','damaged','expired','refund','return','trial product','quality'],
+    title:'Biggest complaints on trial products',
+    sentiment:{ neg:63, neu:25, pos:12 },
+    keywords:['damaged on arrival','expired stock','refund delay','wrong item','quality doubt'],
+    quotes:[
+      { text:"What if it arrives damaged or expired?", src:'Play Store review cluster' },
+      { text:"If this keeps happening, people will just buy from the physical market.", src:'R5 · User Interview' }
+    ],
+    insight:'Trial complaints cluster around <b>delivery/quality anxiety</b> (damage, expiry) and refund friction. An instant no-questions refund + one-tap return neutralises the fear before the trial.'
+  },
+  {
+    id:'price', kw:['price','price point','₹','rupee','trial order','conversion','first-time','cheap','cost'],
+    title:'Price point that maximises first-time trials',
+    sentiment:{ neg:22, neu:30, pos:48 },
+    keywords:['₹15–29 sweet spot','impulse add-on','low risk','sample size','+28% lift'],
+    quotes:[
+      { text:"₹500 for a new brand on 10-min delivery is too expensive to gamble.", src:'Play Store review cluster' },
+      { text:"A ₹20 sample I'll just add to my grocery cart without thinking twice.", src:'App Store review cluster' }
+    ],
+    insight:'First-trial conversion peaks in the <b>₹15–₹29 micro-trial band</b> — low enough for an impulse add-on to an existing grocery cart. Modelled <b>+28% trial-conversion lift</b> vs full-size SKUs.'
+  },
+  {
+    id:'general', kw:[],
+    title:'Cross-category trial friction — overview',
+    sentiment:{ neg:69, neu:21, pos:10 },
+    keywords:['trust vacuum','size risk','fee tax','first-experience','peer proof'],
+    quotes:[
+      { text:"I want good reviews on the specific product — not generic suggestions.", src:'R1 · User Interview' },
+      { text:"If the first experience is bad, I stop using that category entirely.", src:'R7 · User Interview' }
+    ],
+    insight:'The binding constraint across categories is <b>credible peer evidence at the moment of decision</b> — not awareness (rejected) and not primarily price (partially challenged).'
+  }
+];
+function matchQuery(q){
+  const t=(q||'').toLowerCase(); let best=null,bs=0;
+  for(const topic of QUERY_KB){ if(topic.id==='general')continue;
+    const s=topic.kw.reduce((a,k)=>a+(t.includes(k)?1:0),0); if(s>bs){bs=s;best=topic;} }
+  return best||QUERY_KB.find(x=>x.id==='general');
+}
+
 const PIPELINE = [
-    { icon: 'rss_feed', title: 'Data Sources', body: 'Play Store RSS · Reddit API · App Store · public forums', tag: '5,000+ reviews' },
-    { icon: 'cleaning_services', title: 'Preprocessing & PII Scrubbing', body: 'Dedup, language normalise, strip names/handles/emails, sarcasm & code-switch handling', tag: 'clean corpus' },
-    { icon: 'bubble_chart', title: 'Vector Embeddings & HDBSCAN Clustering', body: 'Reviews embedded, density-clustered into friction themes — no fixed taxonomy', tag: 'theme clusters' },
-    { icon: 'auto_awesome', title: 'LLM Insight & Quote Extractor', body: 'Per cluster: names the theme, scores sentiment, pulls verbatim evidence quotes (retrieval-only)', tag: 'PM insight' }
+  { icon:'db',     t:'Play Store Customer Reviews', b:'5,420 raw reviews · Play Store, App Store &amp; forums (Blinkit / Instamart / Zepto)', tag:'raw signal' },
+  { icon:'brain',  t:'LLM Clustering & Sentiment', b:'Embed → density-cluster into friction themes; score sentiment &amp; confidence per cluster', tag:'themes' },
+  { icon:'bulb',   t:'PM Insight Hypothesis', b:'Name the root cause (Size &amp; Price hesitation) and derive a testable micro-trial hypothesis', tag:'insight' },
+  { icon:'rocket', t:'Trial & Confidence Layer', b:'Ship the &lt;₹30 micro-trial MVP with refund + return badges — insight becomes execution', tag:'MVP action' }
 ];
 
 // ============================================================================
-// DISCOVERY KNOWLEDGE BASE — real research findings (ProblemStatement/EdgeCases)
-// Quotes are the project's actual interview verbatims (R1–R7) & corpus findings.
+// RENDER
 // ============================================================================
-const DISCOVERY_KB = [
-    {
-        id: 'grocery', kw: ['grocery', 'groceries', 'habit', 'habitual', 'stick', 'repeat', 'same categor'],
-        theme: 'Habit-Locked Convenience — the grocery groove is self-reinforcing',
-        sentiment: { score: 71, label: 'Complacent / low intent to explore' },
-        quotes: [
-            { text: "I go straight to the relevant category based on my need — I don't browse the homescreen.", source: 'R7 · User Interview' },
-            { text: 'Blinkit is trapped in a stereotype — not compatible or trustworthy for non-grocery needs.', source: 'R6 · User Interview' }
-        ],
-        insight: 'Users reconfirm “Blinkit = grocery” on every high-intent open (Patterns D + E). Discovery must live inside the flow the user is already in — banners are structurally ignored.'
-    },
-    {
-        id: 'beauty', kw: ['personal care', 'beauty', 'skincare', 'skin care', 'cosmetic', 'makeup', 'shampoo'],
-        theme: 'Match Uncertainty — fear of shade / skin-type / quality mismatch',
-        sentiment: { score: 64, label: 'Negative Hesitation' },
-        quotes: [
-            { text: 'I want good reviews on the specific product I am considering — not generic suggestions.', source: 'R1 · User Interview' },
-            { text: "Without a friend or family recommendation, I won't trust a new category enough to try it.", source: 'R4 · User Interview' }
-        ],
-        insight: 'Beauty/personal-care trials stall on the information vacuum at the decision point (Pattern B). Retrieval-based peer proof — not algorithmic picks — is what unblocks the first trial.'
-    },
-    {
-        id: 'baby', kw: ['baby', 'infant', 'diaper', 'newborn', 'toddler'],
-        theme: 'Safety-First Verification — parents need proof before a baby-category trial',
-        sentiment: { score: 68, label: 'High-caution Hesitation' },
-        quotes: [
-            { text: 'I avoid baby products here because of the limited range.', source: 'R4 · User Interview' },
-            { text: 'If the first experience in a category is good I continue; if bad, I stop using that category entirely.', source: 'R7 · User Interview' }
-        ],
-        insight: 'Baby is a sparse-signal, high-stakes category (41 corpus mentions). Below the confidence threshold the module serves static top-rated fallbacks; above it, real ratings + repeat-purchase rate de-risk the trial.'
-    },
-    {
-        id: 'pet', kw: ['pet', 'dog', 'cat', 'litter', 'puppy'],
-        theme: 'Sparse Social Proof — too little peer evidence to de-risk the trial',
-        sentiment: { score: 66, label: 'Negative Hesitation' },
-        quotes: [
-            { text: 'For anything non-grocery I prefer specialist platforms with depth of range and trusted reviews.', source: 'R2 · User Interview' },
-            { text: 'Pet has only 23 mentions across a 32,999-item corpus — near-zero organic discourse.', source: 'Corpus Coverage Analysis' }
-        ],
-        insight: 'Pet (23 mentions) sits far below the density threshold. The Confidence Gate routes low-signal users to static defaults rather than a low-confidence AI guess presented as certain.'
-    },
-    {
-        id: 'electronics', kw: ['electronic', 'gadget', 'earbud', 'charger', 'device', 'first experience', 'quality'],
-        theme: 'First-Experience Determinism — one bad trial permanently closes the category',
-        sentiment: { score: 74, label: 'Strongly Negative' },
-        quotes: [
-            { text: 'If this keeps happening, people will just buy from the physical market — it defeats the purpose of quick commerce.', source: 'R5 · User Interview' },
-            { text: "If the order's purpose isn't fulfilled, what's the point of ordering on Blinkit?", source: 'R3 · User Interview' }
-        ],
-        insight: 'Electronics (509 mentions — densest non-grocery) is the sharpest first-experience-determinism case, chosen as the Phase-1 launch category. The badge must never steer users toward high-return products.'
-    },
-    {
-        id: 'fees', kw: ['fee', 'fees', 'price', 'cost', 'expensive', 'charge', 'delivery charge'],
-        theme: 'The Tax on Trials — regressive fees punish small first-trial baskets',
-        sentiment: { score: 62, label: 'Negative Frustration' },
-        quotes: [
-            { text: 'Cost triples for small-volume, low-price items due to the delivery charge.', source: 'R1 · User Interview' },
-            { text: 'Platform, handling and tax fees are much higher than specialist apps — I treat quick commerce as a last resort.', source: 'R2 · User Interview' }
-        ],
-        insight: 'Fee economics (Pattern C) is finance-owned and out of scope for this layer — but flagged as a compounding dependency: trust makes users willing to try; a lower trial-basket fee would remove the penalty on the small, cautious basket.'
-    },
-    {
-        id: 'general', kw: [],
-        theme: 'Trust & Information Vacuum at the point of decision',
-        sentiment: { score: 69, label: 'Negative Hesitation' },
-        quotes: [
-            { text: 'I want good reviews on the specific product — not generic suggestions.', source: 'R1 · User Interview' },
-            { text: 'If the first experience is bad, I stop using that category entirely.', source: 'R7 · User Interview' }
-        ],
-        insight: 'Across categories the binding constraint is credible peer evidence at the moment of decision — not awareness (hypothesis rejected) and not primarily price (partially challenged).'
-    }
-];
-function matchTopic(q) {
-    const t = (q || '').toLowerCase();
-    let best = null, bestScore = 0;
-    for (const topic of DISCOVERY_KB) {
-        if (topic.id === 'general') continue;
-        const score = topic.kw.reduce((s, k) => s + (t.includes(k) ? 1 : 0), 0);
-        if (score > bestScore) { bestScore = score; best = topic; }
-    }
-    return best || DISCOVERY_KB.find(t => t.id === 'general');
+function renderStaticIcons(){
+  const m={nv1:['grid',18],nv2:['sparkles',18],nv3:['layers',18],nv4:['rocket',18],nvPipe:['branch',17],hdrPipe:['branch',17],
+    lb1:['target',15],lb3:['layers',15],qIcon:['sparkles',19],qSearch:['search',19],qBolt:['bolt',18],
+    mIcon:['branch',22],mClose:['close',19],mVerify:['verify',20]};
+  for(const [id,[n,s]] of Object.entries(m)){ const el=document.getElementById(id); if(el) el.innerHTML=icon(n,s); }
 }
 
-// ============================================================================
-// DATA LAYER
-// ============================================================================
-async function fetchWithFallback(name) {
-    try {
-        const r = await fetch(`${LIVE_BASE}/data/${name}.json`, { signal: AbortSignal.timeout(5000), cache: 'no-store' });
-        if (!r.ok) throw new Error('http ' + r.status);
-        const j = await r.json(); SOURCES[name] = 'live'; return j;
-    } catch (e) {
-        const r2 = await fetch(`/data-snapshot/${name}.json`, { cache: 'no-store' });
-        SOURCES[name] = 'snapshot'; return await r2.json();
-    }
-}
-async function loadAllData() {
-    const results = await Promise.all(FILES.map(fetchWithFallback));
-    FILES.forEach((name, i) => DATA[name] = results[i]);
-}
-function renderSourceBadge() {
-    const el = document.getElementById('dataSourceBadge'); if (!el) return;
-    const vals = Object.values(SOURCES);
-    const allLive = vals.every(s => s === 'live'), anyLive = vals.some(s => s === 'live');
-    el.textContent = allLive ? '● Live data' : (anyLive ? '● Partially live' : '● Snapshot (offline)');
-    el.style.background = allLive ? 'var(--good-bg)' : anyLive ? 'var(--warn-bg)' : 'var(--crit-bg)';
-    el.style.color = allLive ? C.good : anyLive ? C.warn : C.crit;
-    document.getElementById('lastRefreshed').textContent = 'Refreshed ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+function renderKpis(){
+  document.getElementById('kpiRow').innerHTML = KPIS.map(k=>`
+    <div class="card" style="padding:16px 17px;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="width:34px; height:34px; border-radius:9px; background:${k.color}22; display:flex; align-items:center; justify-content:center; color:${k.color};">${icon(k.icon,18)}</div>
+      </div>
+      <div style="font-size:${k.valueSize||30}px; font-weight:800; line-height:1.12; margin-top:12px; color:${k.color==='#F43F5E'||k.color==='#10B981'?k.color:'var(--text)'};">${k.value}</div>
+      <div style="font-size:12.5px; font-weight:700; color:var(--text-2); margin-top:5px;">${k.label}</div>
+      <div style="font-size:11px; color:var(--muted); margin-top:2px;">${k.sub}</div>
+      ${k.bar!=null?`<div style="height:6px; background:var(--raise); border-radius:999px; margin-top:11px; overflow:hidden;"><div style="width:${(k.bar/(k.barMax||100))*100}%; height:100%; background:${k.color}; border-radius:999px;"></div></div>`:''}
+    </div>`).join('');
 }
 
-// ============================================================================
-// FEATURE 1 — AI Insights Query Bar + Synthesis
-// ============================================================================
+// ---- query chips + output ----
 const CHIPS = [
-    'Why do habitual buyers stick to Groceries?',
-    'What prevents users from exploring Personal Care?',
-    'What information is needed before trying Baby Products?'
+  "Why don't grocery users buy Skincare products?",
+  "What are the biggest complaints regarding trial products?",
+  "Which price point triggers maximum first-time trial orders?"
 ];
-function renderChips() {
-    document.getElementById('promptChips').innerHTML = CHIPS.map(c =>
-        `<button class="chip" onclick="runDiscoveryQuery(${JSON.stringify(c).replace(/"/g, '&quot;')})">${c}</button>`).join('');
+function renderChips(){
+  document.getElementById('queryChips').innerHTML = CHIPS.map(c=>
+    `<button class="chip" onclick='runQuery(${JSON.stringify(c)})'>${c}</button>`).join('');
 }
-const prefersReduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const prefersReduced=()=>window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function runDiscoveryQuery(q) {
-    q = (q || '').trim();
-    if (!q) return;
-    document.getElementById('discoveryInput').value = q;
-    const topic = matchTopic(q);
-    const out = document.getElementById('synthesisOutput');
-    // loading state
-    out.innerHTML = `<div class="tile" style="align-items:center; padding:26px;">
-        <div style="display:flex; align-items:center; gap:10px; color:var(--ink-2); font-size:13.5px; font-weight:600;">
-            <span class="material-symbols-outlined" style="font-size:20px; color:var(--accent-ink); animation:shimmer 1s infinite;">neurology</span>
-            Clustering reviews · scoring sentiment · extracting verbatim evidence…
-        </div></div>`;
-    out.scrollIntoView({ behavior: prefersReduced() ? 'auto' : 'smooth', block: 'nearest' });
-    setTimeout(() => renderSynthesis(topic, q), prefersReduced() ? 0 : 750);
+function runQuery(q){
+  q=(q||'').trim(); if(!q)return;
+  document.getElementById('queryInput').value=q;
+  const topic=matchQuery(q);
+  const out=document.getElementById('queryOutput');
+  out.innerHTML=`<div class="card" style="padding:24px; display:flex; align-items:center; gap:10px; color:var(--text-2); font-size:13.5px; font-weight:600;">
+    <span style="color:var(--accent); animation:shimmer 1s infinite;">${icon('brain',20)}</span>
+    Retrieving matching reviews · clustering sentiment · extracting keywords &amp; quotes…</div>`;
+  out.scrollIntoView({behavior:prefersReduced()?'auto':'smooth', block:'nearest'});
+  setTimeout(()=>renderQueryOutput(topic,q), prefersReduced()?0:700);
 }
 
-function renderSynthesis(topic, query) {
-    const out = document.getElementById('synthesisOutput');
-    const s = topic.sentiment;
-    const quotesHtml = topic.quotes.map(qt => `
-        <div style="background:#fafaf8; border:1px solid var(--border); border-radius:12px; padding:13px 15px;">
-            <div style="display:flex; align-items:flex-start; gap:9px;">
-                <span class="material-symbols-outlined" style="font-size:19px; color:var(--accent-ink);">format_quote</span>
-                <div style="font-size:13px; font-style:italic; color:var(--ink); line-height:1.5;">${qt.text}</div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px; margin-top:9px; padding-left:28px;">
-                <span class="material-symbols-outlined" style="font-size:15px; color:var(--good);">verified</span>
-                <span style="font-size:11px; font-weight:700; color:var(--good);">Verified source</span>
-                <span style="font-size:11px; color:var(--muted);">· ${qt.source}</span>
-            </div>
-        </div>`).join('');
+function renderQueryOutput(topic,query){
+  const s=topic.sentiment;
+  const seg=(w,color)=>`<div style="width:${w}%; background:${color};"></div>`;
+  const kw=topic.keywords.map(k=>`<span style="font-size:11px; font-weight:600; color:var(--text-2); background:var(--surface2); border:1px solid var(--border); padding:4px 10px; border-radius:999px;">${k}</span>`).join('');
+  const quotes=topic.quotes.map(q=>`
+    <div style="background:var(--raise); border:1px solid var(--border); border-radius:11px; padding:12px 14px;">
+      <div style="display:flex; gap:8px;"><span style="color:var(--accent); flex-shrink:0;">${icon('quote',16)}</span>
+      <div style="font-size:12.5px; font-style:italic; color:var(--text); line-height:1.5;">${q.text}</div></div>
+      <div style="display:flex; align-items:center; gap:6px; margin-top:8px; padding-left:24px;">
+        <span style="color:var(--emerald);">${icon('check',14,2.5)}</span>
+        <span style="font-size:10.5px; font-weight:700; color:var(--emerald);">Verified source</span>
+        <span style="font-size:10.5px; color:var(--muted);">· ${q.src}</span></div>
+    </div>`).join('');
 
-    out.innerHTML = `
-    <div class="tile" style="padding:0; overflow:hidden;">
-        <div style="display:flex; align-items:center; gap:9px; padding:14px 20px; background:var(--ink);">
-            <span class="material-symbols-outlined" style="font-size:20px; color:var(--accent);">auto_awesome</span>
-            <span style="font-size:13.5px; font-weight:800; color:#fff;">AI Synthesis Output</span>
-            <span style="font-size:11px; color:#9a9a9a; margin-left:auto;">query: “${query.replace(/</g, '&lt;')}”</span>
+  document.getElementById('queryOutput').innerHTML=`
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="display:flex; align-items:center; gap:9px; padding:14px 20px; background:var(--raise); border-bottom:1px solid var(--border);">
+      <span style="color:var(--accent);">${icon('sparkles',18)}</span>
+      <span style="font-size:13.5px; font-weight:800;">AI Analysis · ${topic.title}</span>
+      <span style="font-size:11px; color:var(--muted); margin-left:auto;">query: “${query.replace(/</g,'&lt;')}”</span>
+    </div>
+    <div style="padding:18px 20px;">
+      <div class="grid g2" style="grid-template-columns:1.25fr 1fr;">
+        <div>
+          <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Sentiment Breakdown</div>
+          <div style="display:flex; height:14px; border-radius:999px; overflow:hidden; gap:2px; background:var(--raise);">
+            ${seg(s.neg,C.rose)}${seg(s.neu,C.faint)}${seg(s.pos,C.emerald)}
+          </div>
+          <div style="display:flex; gap:16px; margin-top:9px; font-size:11.5px;">
+            <span style="color:var(--rose); font-weight:700;">● ${s.neg}% Negative</span>
+            <span style="color:var(--muted); font-weight:700;">● ${s.neu}% Neutral</span>
+            <span style="color:var(--emerald); font-weight:700;">● ${s.pos}% Positive</span>
+          </div>
+          <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin:16px 0 8px;">Top Keywords</div>
+          <div style="display:flex; flex-wrap:wrap; gap:7px;">${kw}</div>
+          <div style="margin-top:16px; background:var(--accent-dim); border:1px solid rgba(242,201,76,0.3); border-radius:11px; padding:12px 14px;">
+            <div style="display:flex; align-items:center; gap:7px; margin-bottom:5px;"><span style="color:var(--accent);">${icon('bulb',16)}</span><span style="font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--accent);">PM Insight</span></div>
+            <div style="font-size:13px; color:var(--text); line-height:1.5;">${topic.insight}</div>
+          </div>
         </div>
-        <div style="padding:18px 20px;">
-            <div class="grid g2" style="grid-template-columns: 1.3fr 1fr; align-items:stretch;">
-                <div>
-                    <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:5px;">Top Extracted Theme</div>
-                    <div style="font-size:18px; font-weight:800; color:var(--ink); line-height:1.25;">${topic.theme}</div>
-                    <div style="margin-top:16px; font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">Clustered Sentiment Score</div>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="font-size:30px; font-weight:800; color:var(--crit); line-height:1;">${s.score}%</div>
-                        <div>
-                            <div style="font-size:13px; font-weight:700; color:var(--ink);">${s.label}</div>
-                            <div style="width:180px; height:8px; background:var(--track); border-radius:999px; margin-top:5px; overflow:hidden;">
-                                <div style="width:${s.score}%; height:100%; background:var(--crit); border-radius:999px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="margin-top:16px; background:var(--warn-bg); border-radius:12px; padding:13px 15px;">
-                        <div style="display:flex; align-items:center; gap:7px; margin-bottom:5px;">
-                            <span class="material-symbols-outlined" style="font-size:17px; color:var(--accent-ink);">lightbulb</span>
-                            <span style="font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--accent-ink);">PM Insight</span>
-                        </div>
-                        <div style="font-size:13px; color:var(--ink); line-height:1.5;">${topic.insight}</div>
-                    </div>
-                </div>
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted);">Verbatim Evidence — clustered source data</div>
-                    ${quotesHtml}
-                </div>
-            </div>
-            <div id="aiNarrative" style="margin-top:16px; border-top:1px solid var(--grid); padding-top:14px;">
-                <div style="display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px;">
-                    <span class="material-symbols-outlined" style="font-size:17px; animation:shimmer 1s infinite;">smart_toy</span>
-                    Generating grounded AI narrative…
-                </div>
-            </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted);">Verbatim Evidence</div>
+          ${quotes}
         </div>
+      </div>
+      <div id="aiNarrative" style="margin-top:16px; border-top:1px solid var(--border); padding-top:14px;">
+        <div style="display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px;">
+          <span style="animation:shimmer 1s infinite;">${icon('cpu',17)}</span> Generating grounded AI narrative…</div>
+      </div>
+    </div>
+  </div>`;
+  fetchAiNarrative(query);
+}
+
+async function fetchAiNarrative(query){
+  const el=document.getElementById('aiNarrative');
+  try{
+    const res=await fetch('/api/pm-chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:[{role:'user',content:query}],dataFacts:buildDataFacts()}),signal:AbortSignal.timeout(15000)});
+    if(!res.ok)throw 0; const d=await res.json(); if(!d.success)throw 0;
+    el.innerHTML=`<div style="display:flex; align-items:flex-start; gap:9px;"><span style="color:var(--accent);">${icon('cpu',18)}</span>
+      <div><span style="font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--muted);">AI narrative · live</span>
+      <div style="font-size:13px; color:var(--text-2); line-height:1.55; margin-top:3px;">${d.reply}</div></div></div>`;
+  }catch(e){ el.innerHTML=`<div style="font-size:12px; color:var(--muted);">Structured analysis above is from the verified review corpus. (Live AI narrative unavailable right now.)</div>`; }
+}
+
+// ---- friction clusters ----
+function renderClusters(){
+  document.getElementById('clusterCard').innerHTML = CLUSTERS.map((c,i)=>`
+    <div style="${i>0?'margin-top:16px;':''}">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:26px; height:26px; border-radius:7px; background:${c.color}22; color:${c.color}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">${i+1}</span>
+          <span style="font-size:14px; font-weight:800;">${c.name}</span>
+        </div>
+        <span style="font-size:15px; font-weight:800; color:${c.color}; font-variant-numeric:tabular-nums;">${c.pct}%</span>
+      </div>
+      <div style="height:7px; background:var(--raise); border-radius:999px; overflow:hidden;"><div style="width:${c.pct}%; height:100%; background:${c.color}; border-radius:999px;"></div></div>
+      <div style="display:flex; gap:7px; margin-top:8px; padding:9px 11px; background:var(--raise); border:1px solid var(--border); border-radius:10px;">
+        <span style="color:${c.color}; flex-shrink:0;">${icon('quote',14)}</span>
+        <span style="font-size:12px; font-style:italic; color:var(--text-2); line-height:1.45;">${c.quote}</span>
+      </div>
+    </div>`).join('');
+
+  const ctx=document.getElementById('clusterChart').getContext('2d');
+  new Chart(ctx,{ type:'doughnut',
+    data:{ labels:CLUSTERS.map(c=>c.name), datasets:[{ data:CLUSTERS.map(c=>c.pct), backgroundColor:CLUSTERS.map(c=>c.color), borderColor:'#1E293B', borderWidth:3 }] },
+    options:{ cutout:'62%', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ color:C.text2, boxWidth:8, boxHeight:8, padding:12, usePointStyle:true, font:{size:11} } },
+        tooltip:{ callbacks:{ label:c=>`${c.label}: ${c.parsed}% of neg. reviews` } } } } });
+}
+
+function renderStrategy(){
+  document.getElementById('pmStrategy').innerHTML=`
+    <div class="card" style="padding:16px 18px; background:linear-gradient(135deg, rgba(242,201,76,0.14), rgba(16,185,129,0.10)); border:1px solid rgba(242,201,76,0.35); display:flex; align-items:center; gap:14px;">
+      <div style="width:42px; height:42px; border-radius:11px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${icon('bulb',22)}</div>
+      <div>
+        <div style="font-size:10.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin-bottom:3px;">PM Strategy Derived</div>
+        <div style="font-size:14.5px; font-weight:700; color:var(--text); line-height:1.4;">Launch Micro-Trial SKUs (10ml @ ₹15–₹29) with a 100% Instant-Refund Guarantee — directly dissolving the Size, Price &amp; Return friction clusters above.</div>
+      </div>
     </div>`;
-
-    fetchAiNarrative(query);
 }
 
-// Enhance with the real Gemini/Groq narrative (grounded in DOCS). Graceful on failure.
-async function fetchAiNarrative(query) {
-    const el = document.getElementById('aiNarrative');
-    try {
-        const dataFacts = buildDataFacts();
-        const res = await fetch('/api/pm-chat', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: [{ role: 'user', content: query }], dataFacts }),
-            signal: AbortSignal.timeout(15000)
-        });
-        if (!res.ok) throw new Error('http ' + res.status);
-        const d = await res.json();
-        if (!d.success) throw new Error('fail');
-        el.innerHTML = `<div style="display:flex; align-items:flex-start; gap:9px;">
-            <span class="material-symbols-outlined" style="font-size:18px; color:var(--accent-ink);">smart_toy</span>
-            <div><span style="font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--muted);">AI narrative</span>
-            <div style="font-size:13px; color:var(--ink-2); line-height:1.55; margin-top:3px;">${d.reply}</div></div></div>`;
-    } catch (e) {
-        el.innerHTML = `<div style="font-size:12px; color:var(--muted);">Structured synthesis above is from the verified research corpus. (Live AI narrative unavailable right now.)</div>`;
-    }
+function renderBridge(){
+  document.getElementById('bridge').innerHTML=`
+    <div class="card" style="padding:22px 24px; background:linear-gradient(120deg, #111827 0%, #1E293B 55%, #172033 100%); border:1px solid var(--border-2); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <div style="width:50px; height:50px; border-radius:13px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${icon('rocket',26)}</div>
+        <div>
+          <div style="font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin-bottom:3px;">From Insight to Execution</div>
+          <div style="font-size:17px; font-weight:800; line-height:1.25;">Test the AI-Powered Trial &amp; Confidence Engine <span style="color:var(--muted); font-weight:600; font-size:13px;">· Part 4 MVP</span></div>
+          <div style="font-size:12.5px; color:var(--text-2); margin-top:4px;">The friction clusters above, shipped as a live micro-trial nudge with refund &amp; return badges.</div>
+        </div>
+      </div>
+      <a href="${PROTO}/prototype/trial-engine.html" target="_blank" rel="noopener"
+        style="background:var(--accent); color:#0F172A; font-size:14px; font-weight:800; padding:14px 22px; border-radius:12px; display:flex; align-items:center; gap:9px; white-space:nowrap;">
+        Launch Live Prototype App ${icon('arrow',17,2.5)}
+      </a>
+    </div>`;
 }
 
-// ============================================================================
-// FEATURE 3 — Core metrics + friction
-// ============================================================================
-function renderCoreMetrics() {
-    const el = document.getElementById('coreMetrics');
-    el.innerHTML = CORE_METRICS.map(m => {
-        const good = m.goodUp ? m.trend >= 0 : m.trend <= 0;
-        const arrow = m.trend >= 0 ? 'trending_up' : 'trending_down';
-        const badge = m.star ? `<span style="font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--accent-ink); background:var(--warn-bg); padding:2px 8px; border-radius:999px;">North Star</span>`
-            : m.guardrail ? `<span style="font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--crit); background:var(--crit-bg); padding:2px 8px; border-radius:999px;">Guardrail</span>` : '';
-        const targetLine = m.target ? `<div style="font-size:11px; color:var(--muted); margin-top:2px;">Target ${m.target}${m.unit} · gap ${(m.target - m.value).toFixed(1)} pts</div>` : '';
-        return `<div class="tile" style="${m.star ? 'border-top:3px solid var(--accent);' : ''}">
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-                <span class="material-symbols-outlined" style="font-size:22px; color:${m.star ? 'var(--accent-ink)' : 'var(--muted)'};">${m.icon}</span>${badge}
-            </div>
-            <div style="font-size:33px; font-weight:800; line-height:1.05; margin-top:10px; font-variant-numeric:tabular-nums;">${m.value}${m.unit}</div>
-            <div style="font-size:13px; font-weight:700; color:var(--ink); margin-top:3px;">${m.label}</div>
-            <div style="font-size:11px; color:var(--muted); margin-top:1px;">${m.sub}</div>
-            ${targetLine}
-            <div style="font-size:11.5px; font-weight:700; margin-top:9px; color:${good ? C.good : C.crit};">
-                <span class="material-symbols-outlined" style="font-size:15px;">${arrow}</span> ${Math.abs(m.trend)} pts vs last period
-            </div>
-        </div>`;
-    }).join('');
+// ---- pipeline modal ----
+function renderPipeline(){
+  document.getElementById('pipelineFlow').innerHTML = PIPELINE.map((p,i)=>`
+    <div style="flex:1; display:flex; align-items:center;">
+      <div style="flex:1; background:var(--raise); border:1px solid var(--border); border-radius:14px; padding:16px 15px; min-height:184px; display:flex; flex-direction:column;">
+        <div style="width:40px; height:40px; border-radius:10px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; margin-bottom:11px;">${icon(p.icon,22)}</div>
+        <div style="font-size:10px; font-weight:800; color:var(--accent); letter-spacing:.03em;">STEP ${i+1}</div>
+        <div style="font-size:13.5px; font-weight:800; margin:3px 0 6px; line-height:1.2;">${p.t}</div>
+        <div style="font-size:11px; color:var(--muted); line-height:1.45; flex:1;">${p.b}</div>
+        <div style="font-size:10px; font-weight:700; color:#0F172A; background:var(--accent); align-self:flex-start; padding:2px 9px; border-radius:999px; margin-top:9px;">${p.tag}</div>
+      </div>
+      ${i<PIPELINE.length-1?`<span class="arrow" style="color:var(--faint); padding:0 4px;">${icon('arrow',24,2)}</span>`:''}
+    </div>`).join('');
+}
+function openArchModal(){ renderPipeline(); document.getElementById('archModal').classList.add('open'); }
+function closeArchModal(){ document.getElementById('archModal').classList.remove('open'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeArchModal(); });
+
+// connection ping to live prototype
+async function pingProto(){
+  const el=document.getElementById('connBadge');
+  try{ await fetch(PROTO+'/data/dashboard_metrics.json',{signal:AbortSignal.timeout(5000),cache:'no-store'});
+    el.innerHTML=`<span style="color:${C.emerald};">●</span> Live prototype connected`; el.style.color=C.emerald;
+  }catch(e){ el.innerHTML=`<span style="color:${C.amber};">●</span> Prototype offline`; el.style.color=C.muted; }
 }
 
-function renderFriction() {
-    document.getElementById('frictionBody').innerHTML = FRICTION.map(f => `
-        <tr style="border-bottom:1px solid var(--grid);">
-            <td style="padding:11px 18px; font-weight:700; color:var(--ink);">${f.cat}</td>
-            <td style="padding:11px 12px;"><span class="friction-pill" style="background:${frictionBg(f.level)}; color:${frictionColor(f.level)};">${f.level}</span></td>
-            <td style="padding:11px 12px; text-align:right; font-variant-numeric:tabular-nums; font-weight:700; color:${frictionColor(f.level)};">${f.score}</td>
-            <td style="padding:11px 18px; color:var(--muted); font-size:12px;">${f.note}</td>
-        </tr>`).join('');
-
-    const ctx = document.getElementById('frictionChart').getContext('2d');
-    if (charts.friction) charts.friction.destroy();
-    charts.friction = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: FRICTION.map(f => f.cat),
-            datasets: [{ label: 'Friction score', data: FRICTION.map(f => f.score), backgroundColor: FRICTION.map(f => frictionColor(f.level)), borderRadius: 5, maxBarThickness: 22 }]
-        },
-        options: {
-            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `Friction ${c.parsed.x}/100` } } },
-            scales: {
-                x: { beginAtZero: true, max: 100, ticks: { color: C.muted }, grid: { color: C.grid }, border: { display: false } },
-                y: { ticks: { color: C.ink2, font: { size: 10.5 } }, grid: { display: false }, border: { color: C.baseline } }
-            }
-        }
-    });
+// facts for the PM chatbot / AI narrative
+function buildDataFacts(){
+  const k=KPIS.map(x=>`${x.label.replace(/&amp;/g,'&')}: ${x.value.replace(/&lt;/g,'<')}`).join('; ');
+  const cl=CLUSTERS.map(c=>`${c.name} ${c.pct}%`).join('; ');
+  return `EXECUTIVE KPIs: ${k}\nFRICTION CLUSTERS (share of negative reviews): ${cl}\nPM STRATEGY: micro-trial SKUs 10ml @ ₹15–₹29 + instant refund + one-tap return.\nEvidence base: 5,420 public reviews + 7 interviews.`;
 }
 
-// ============================================================================
-// FEATURE 2 — pipeline modal
-// ============================================================================
-function renderPipeline() {
-    const el = document.getElementById('pipelineFlow');
-    el.innerHTML = PIPELINE.map((p, i) => `
-        <div style="flex:1; display:flex; align-items:center;">
-            <div style="flex:1; background:var(--ink); border-radius:14px; padding:16px 15px; min-height:170px; display:flex; flex-direction:column;">
-                <div style="width:40px; height:40px; border-radius:10px; background:var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:11px;">
-                    <span class="material-symbols-outlined" style="font-size:22px; color:var(--ink);">${p.icon}</span>
-                </div>
-                <div style="font-size:10px; font-weight:800; color:var(--accent); letter-spacing:.03em;">STEP ${i + 1}</div>
-                <div style="font-size:13.5px; font-weight:800; color:#fff; margin:3px 0 6px; line-height:1.2;">${p.title}</div>
-                <div style="font-size:11px; color:#b9b9c0; line-height:1.45; flex:1;">${p.body}</div>
-                <div style="font-size:10px; font-weight:700; color:var(--ink); background:var(--accent); align-self:flex-start; padding:2px 9px; border-radius:999px; margin-top:9px;">${p.tag}</div>
-            </div>
-            ${i < PIPELINE.length - 1 ? `<span class="material-symbols-outlined arrow" style="font-size:26px; color:var(--baseline); padding:0 4px;">arrow_forward</span>` : ''}
-        </div>`).join('');
+function init(){
+  renderStaticIcons();
+  renderKpis();
+  renderChips();
+  renderClusters();
+  renderStrategy();
+  renderBridge();
+  pingProto();
 }
-function openArchModal() { renderPipeline(); document.getElementById('archModal').classList.add('open'); }
-function closeArchModal() { document.getElementById('archModal').classList.remove('open'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeArchModal(); });
-
-// ============================================================================
-// SUPPORTING VISUALS (kept from the analytics build)
-// ============================================================================
-function renderGauge() {
-    const m = CORE_METRICS[0];        // North Star
-    const val = m.value, target = m.target, filled = Math.min(val, target);
-    const ctx = document.getElementById('ccarGauge').getContext('2d');
-    if (charts.gauge) charts.gauge.destroy();
-    charts.gauge = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: ['Adopted', 'Gap to target'], datasets: [{ data: [filled, Math.max(target - filled, 0)], backgroundColor: [C.accent, C.track], borderWidth: 0, circumference: 180, rotation: 270 }] },
-        options: { cutout: '72%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
-    });
-    document.getElementById('gaugeCenter').innerHTML =
-        `<div style="font-size:32px; font-weight:800; line-height:1;">${val}%</div>
-         <div style="font-size:11.5px; font-weight:700; color:${C.good}; margin-top:2px;"><span class="material-symbols-outlined" style="font-size:14px;">trending_up</span> ${m.trend} pts</div>
-         <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">0% ———— target ${target}%</div>`;
-}
-function renderDensityDonut() {
-    const cats = DATA.category_density_flags.categories;
-    const tracked = Object.entries(cats).filter(([id]) => id !== 'groceries_fresh' && id !== 'snacks_beverages');
-    const dense = tracked.filter(([, v]) => v.density_flag === 'dense').length;
-    const sparse = tracked.filter(([, v]) => v.density_flag === 'sparse').length;
-    const ctx = document.getElementById('densityDonut').getContext('2d');
-    if (charts.densityDonut) charts.densityDonut.destroy();
-    charts.densityDonut = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: ['Dense', 'Sparse'], datasets: [{ data: [dense, sparse], backgroundColor: [C.good, C.warn], borderColor: '#fff', borderWidth: 2 }] },
-        options: { cutout: '68%', responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed} categories` } } } }
-    });
-    document.getElementById('densityCenter').innerHTML =
-        `<div style="font-size:27px; font-weight:800; line-height:1; margin-top:-18px;">${dense + sparse}</div><div style="font-size:10.5px; color:var(--muted);">categories</div>`;
-}
-function renderComplaintDonut() {
-    const sig = DATA.trust_signals_automated.category_signals.electronics;
-    const cb = (sig && sig.complaint_breakdown) || {};
-    let entries = Object.entries(cb).sort((a, b) => b[1] - a[1]);
-    const top = entries.slice(0, 5); const other = entries.slice(5).reduce((s, [, v]) => s + v, 0);
-    if (other > 0) top.push(['other_rest', other]);
-    const pretty = k => k.replace(/_/g, ' ').replace(/\brest\b/, '').replace(/\b\w/g, c => c.toUpperCase()).trim();
-    const ctx = document.getElementById('complaintDonut').getContext('2d');
-    if (charts.complaintDonut) charts.complaintDonut.destroy();
-    charts.complaintDonut = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: top.map(([k]) => pretty(k)), datasets: [{ data: top.map(([, v]) => v), backgroundColor: C.s.slice(0, top.length), borderColor: '#fff', borderWidth: 2 }] },
-        options: { cutout: '58%', responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 8, padding: 8, font: { size: 10.5 } } }, tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed}` } } } }
-    });
-}
-const thresholdLine = {
-    id: 'thresholdLine',
-    afterDraw(chart, args, opts) {
-        if (opts.value == null) return;
-        const { ctx, chartArea: { left, right }, scales: { y } } = chart;
-        const yPos = y.getPixelForValue(opts.value);
-        ctx.save(); ctx.beginPath(); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.crit;
-        ctx.moveTo(left, yPos); ctx.lineTo(right, yPos); ctx.stroke();
-        ctx.setLineDash([]); ctx.fillStyle = C.crit; ctx.font = '600 10px system-ui'; ctx.fillText(`alert ${opts.value}%`, right - 62, yPos - 5); ctx.restore();
-    }
-};
-function renderAbandonmentChart() {
-    const m = DATA.dashboard_metrics; const threshold = m.abandonment_alert_threshold; const data = m.category_abandonment;
-    const ctx = document.getElementById('abandonChart').getContext('2d');
-    if (charts.abandon) charts.abandon.destroy();
-    charts.abandon = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: data.map(c => c.name), datasets: [{ label: 'Abandonment %', data: data.map(c => c.value), backgroundColor: data.map(c => c.value >= threshold ? C.crit : C.s[0]), borderRadius: 4, maxBarThickness: 46 }] },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, thresholdLine: { value: threshold }, tooltip: { callbacks: { label: c => `${c.parsed}% abandon` } } },
-            scales: { x: { ticks: { color: C.muted, font: { size: 10 }, maxRotation: 40 }, grid: { display: false }, border: { color: C.baseline } }, y: { beginAtZero: true, suggestedMax: Math.max(...data.map(c => c.value), threshold) + 8, ticks: { color: C.muted, callback: v => v + '%' }, grid: { color: C.grid }, border: { display: false } } }
-        },
-        plugins: [thresholdLine]
-    });
-    document.getElementById('abandonNote').textContent = `Alert threshold ${threshold}% — bars above the dashed line (red) flag worse-than-acceptable trial abandonment.`;
-}
-function renderDensityBar() {
-    const cats = DATA.category_density_flags.categories;
-    const entries = Object.entries(cats).filter(([id]) => id !== 'groceries_fresh' && id !== 'snacks_beverages').sort((a, b) => b[1].mentions - a[1].mentions);
-    const ctx = document.getElementById('densityBar').getContext('2d');
-    if (charts.densityBar) charts.densityBar.destroy();
-    charts.densityBar = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: entries.map((e, i) => DATA.trust_signals_automated.category_signals[e[0]]?.display_name || e[0]),
-            datasets: [{ label: 'Corpus mentions', data: entries.map(([, v]) => v.mentions), backgroundColor: entries.map(([, v]) => v.density_flag === 'dense' ? C.good : C.warn), borderRadius: 4, maxBarThickness: 20 }]
-        },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed} mentions` } } }, scales: { x: { beginAtZero: true, ticks: { color: C.muted }, grid: { color: C.grid }, border: { display: false } }, y: { ticks: { color: C.ink2, font: { size: 10.5 } }, grid: { display: false }, border: { color: C.baseline } } } }
-    });
-}
-function renderCategoryTable() {
-    const sig = DATA.trust_signals_automated.category_signals; const density = DATA.category_density_flags.categories;
-    document.getElementById('categoryTableBody').innerHTML = Object.entries(sig).map(([id, s]) => {
-        const d = density[id] || {}; const dense = d.density_flag === 'dense';
-        return `<tr style="border-bottom:1px solid var(--grid);">
-            <td style="padding:9px 18px; font-weight:700; color:var(--ink);">${s.display_name || id}</td>
-            <td style="padding:9px 18px; text-align:right; color:var(--ink-2); font-variant-numeric:tabular-nums;">${s.corpus_mentions ?? '—'}</td>
-            <td style="padding:9px 18px; text-align:right; color:var(--ink-2); font-variant-numeric:tabular-nums;">${s.avg_rating_rated_only ?? '—'}</td>
-            <td style="padding:9px 18px;"><span class="friction-pill" style="background:${dense ? 'var(--good-bg)' : 'var(--warn-bg)'}; color:${dense ? C.good : C.warn};">${d.density_flag || '—'}</span></td>
-        </tr>`;
-    }).join('');
-}
-function renderProfiles() {
-    const users = DATA.user_profiles.users;
-    document.getElementById('profilesGrid').innerHTML = Object.values(users).map(u => `
-        <div class="tile">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-                <div style="font-weight:800; font-size:13.5px;">${u.persona}</div>
-                ${u.is_ccar_active ? `<span class="friction-pill" style="background:var(--good-bg); color:${C.good};">Explorer</span>` : `<span class="friction-pill" style="background:#eef0ee; color:var(--muted);">Single-lane</span>`}
-            </div>
-            <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:8px;">${u.total_orders_90d} orders / 90 days</div>
-            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
-                ${(u.categories_purchased_90d || []).map(c => `<span style="font-size:10.5px; background:#f0f1ef; color:var(--ink-2); padding:2px 8px; border-radius:999px;">${c}</span>`).join('')}
-            </div>
-            <div style="font-size:11px; color:var(--muted);">${u.last_non_grocery_purchase ? `Last non-grocery: ${u.last_non_grocery_purchase.category} · ${u.last_non_grocery_purchase.days_ago}d ago` : 'No non-grocery purchase on record'}</div>
-        </div>`).join('');
-}
-
-// facts block for the PM chatbot + AI narrative
-function buildDataFacts() {
-    const core = CORE_METRICS.map(m => `${m.label}: ${m.value}${m.unit}${m.target ? ` (target ${m.target}${m.unit})` : ''} trend ${m.trend >= 0 ? '+' : ''}${m.trend}`).join('; ');
-    const fr = FRICTION.map(f => `${f.cat}: ${f.level} (${f.score})`).join('; ');
-    let extra = '';
-    try {
-        const m = DATA.dashboard_metrics;
-        extra = `\nAbandonment %: ${m.category_abandonment.map(c => `${c.name}: ${c.value}%`).join('; ')} (alert ${m.abandonment_alert_threshold}%)`;
-    } catch (e) {}
-    return `CORE CASE-STUDY METRICS: ${core}\nCATEGORY FRICTION SCORES (0-100): ${fr}${extra}\n(Data source: ${Object.values(SOURCES).every(s => s === 'live') ? 'live deployment' : 'bundled snapshot'})`;
-}
-
-async function initDashboard() {
-    renderChips();
-    await loadAllData();
-    renderSourceBadge();
-    renderCoreMetrics();
-    renderGauge();
-    renderDensityDonut();
-    renderComplaintDonut();
-    renderFriction();
-    renderAbandonmentChart();
-    renderDensityBar();
-    renderCategoryTable();
-    renderProfiles();
-}
-document.addEventListener('DOMContentLoaded', initDashboard);
+document.addEventListener('DOMContentLoaded', init);

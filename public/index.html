@@ -3,275 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blinkit — AI Review Analysis & Discovery Engine</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<title>Blinkit — PM Analytics Control Center</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
-    :root {
-        --page:        #f4f4f2;
-        --surface:     #ffffff;
-        --ink:         #111111;   /* Blinkit black */
-        --ink-2:       #45454a;
-        --muted:       #85858c;
-        --grid:        #e8e7e2;
-        --baseline:    #c3c2b7;
-        --border:      rgba(17,17,17,0.10);
-        --accent:      #F2C94C;   /* Blinkit yellow */
-        --accent-ink:  #7a5b00;
-        --s1:#2a78d6; --s2:#008300; --s3:#e87ba4; --s4:#eda100; --s5:#1baf7a; --s6:#eb6834;
-        --good:#12923a; --good-bg:rgba(18,146,58,0.10);
-        --warn:#c98a00; --warn-bg:rgba(242,201,76,0.18);
-        --crit:#c62828; --crit-bg:rgba(198,40,40,0.09);
-    }
-    * { box-sizing: border-box; }
-    body {
-        margin: 0;
-        font-family: system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-        background: var(--page); color: var(--ink); -webkit-font-smoothing: antialiased;
-    }
-    .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; line-height: 1; vertical-align: middle; }
-    ::-webkit-scrollbar { width: 9px; height: 9px; }
-    ::-webkit-scrollbar-thumb { background: #cfceC8; border-radius: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    a { color: inherit; }
-    button { font-family: inherit; cursor: pointer; }
-
-    .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-        box-shadow: 0 1px 2px rgba(17,17,17,0.04), 0 1px 1px rgba(17,17,17,0.03); padding: 16px 18px; display: flex; flex-direction: column; }
-    .tile-title { font-size: 12px; font-weight: 700; color: var(--ink-2); margin: 0 0 2px; }
-    .tile-sub { font-size: 11px; color: var(--muted); margin: 0 0 12px; }
-    .grid { display: grid; gap: 14px; }
-    .sec-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 4px 0 9px; display:flex; align-items:center; gap:7px; }
-
-    .chip { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); transition: all .15s ease; }
-    .chip:hover { border-color: var(--accent); background: var(--warn-bg); color: var(--ink); }
-
-    .friction-pill { font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 999px; }
-
-    /* modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(17,17,17,0.55); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 24px; }
-    .modal-overlay.open { display: flex; }
-    .modal-card { background: var(--surface); border-radius: 16px; max-width: 1040px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 70px rgba(0,0,0,.35); }
-
-    .navlink:hover { background: #f0f1ef; }
-    @media (max-width: 1100px) {
-        .sidebar { display: none !important; }
-        .g4 { grid-template-columns: 1fr 1fr !important; }
-        .g3 { grid-template-columns: 1fr !important; }
-        .g2 { grid-template-columns: 1fr !important; }
-        .flow { flex-direction: column !important; }
-        .flow .arrow { transform: rotate(90deg); }
-    }
-    @keyframes shimmer { 0%{opacity:.4} 50%{opacity:1} 100%{opacity:.4} }
-    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  :root {
+    --bg:#0F172A; --surface:#1E293B; --surface2:#22304A; --raise:#0B1120;
+    --border:rgba(148,163,184,0.14); --border-2:rgba(148,163,184,0.22);
+    --text:#F1F5F9; --text-2:#CBD5E1; --muted:#94A3B8; --faint:#64748B;
+    --accent:#F2C94C; --accent-dim:rgba(242,201,76,0.14);
+    --emerald:#10B981; --emerald-dim:rgba(16,185,129,0.14);
+    --rose:#F43F5E; --rose-dim:rgba(244,63,94,0.14);
+    --amber:#F59E0B; --amber-dim:rgba(245,158,11,0.15);
+    --blue:#3B82F6; --blue-dim:rgba(59,130,246,0.14);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  button { font-family:inherit; cursor:pointer; }
+  ::-webkit-scrollbar { width:9px; height:9px; }
+  ::-webkit-scrollbar-thumb { background:#334155; border-radius:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; }
+  .sec-label { font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:2px 0 11px; display:flex; align-items:center; gap:8px; }
+  .grid { display:grid; gap:14px; }
+  .chip { border:1px solid var(--border-2); background:var(--surface2); color:var(--text-2); border-radius:999px; padding:9px 15px; font-size:12.5px; font-weight:600; transition:all .15s ease; text-align:left; }
+  .chip:hover { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
+  .navlink:hover { background:var(--surface2); }
+  .modal-overlay { position:fixed; inset:0; background:rgba(2,6,23,0.7); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:200; padding:24px; }
+  .modal-overlay.open { display:flex; }
+  @media (max-width:1080px){ .sidebar{display:none!important} .g4{grid-template-columns:1fr 1fr!important} .g2{grid-template-columns:1fr!important} .flow{flex-direction:column!important} .flow .arrow{transform:rotate(90deg)} }
+  @keyframes shimmer{0%{opacity:.4}50%{opacity:1}100%{opacity:.4}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  .code-key{color:#F2C94C}.code-str{color:#6EE7B7}.code-num{color:#93C5FD}
 </style>
 </head>
 <body>
-
 <div style="display:flex; min-height:100vh;">
-    <!-- Sidebar -->
-    <aside class="sidebar" style="width:232px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:18px 14px;">
-        <div style="display:flex; flex-direction:column; align-items:flex-start; margin-bottom:22px; padding:0 4px;">
-            <img src="blinkit-logo.svg" alt="blinkit" style="width:108px; height:108px; border-radius:22px; display:block; box-shadow:0 2px 8px rgba(17,17,17,0.10);">
-            <div style="font-size:11px; font-weight:700; color:var(--ink-2); margin-top:9px; letter-spacing:.02em;">PM Discovery Engine</div>
+  <!-- Sidebar -->
+  <aside class="sidebar" style="width:236px; flex-shrink:0; background:var(--raise); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:18px 14px;">
+    <div style="display:flex; flex-direction:column; align-items:flex-start; margin-bottom:22px; padding:0 4px;">
+      <img src="blinkit-logo.svg" alt="blinkit" style="width:100px; height:100px; border-radius:20px;">
+      <div style="font-size:11px; font-weight:700; color:var(--text-2); margin-top:9px;">PM Analytics Control Center</div>
+    </div>
+    <nav style="display:flex; flex-direction:column; gap:2px; font-size:13.5px;">
+      <a href="#kpis" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--text); background:var(--accent-dim); font-weight:700;"><span id="nv1"></span> Executive KPIs</a>
+      <a href="#query" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv2"></span> AI Query Engine</a>
+      <a href="#clusters" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv3"></span> Friction Heatmap</a>
+      <a href="#bridge" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv4"></span> MVP Bridge</a>
+    </nav>
+    <button onclick="openArchModal()" style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border-2); border-radius:10px; padding:11px; font-size:12.5px; font-weight:700;">
+      <span id="nvPipe"></span> View AI Pipeline
+    </button>
+    <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--border);">
+      <span id="connBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--muted);">● Connecting…</span>
+    </div>
+  </aside>
+
+  <main style="flex:1; min-width:0; overflow-x:hidden; padding:22px 26px; max-width:1420px;">
+    <header style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+      <div style="display:flex; align-items:center; gap:13px;">
+        <img src="blinkit-logo.svg" alt="blinkit" style="width:44px; height:44px; border-radius:11px;">
+        <div>
+          <h1 style="font-size:21px; font-weight:800; margin:0;">PM Insights &amp; Discovery Engine</h1>
+          <p style="font-size:12.5px; color:var(--muted); margin:3px 0 0;">Play Store Reviews → LLM Clustering → PM Insight → Trial &amp; Confidence Layer</p>
         </div>
-        <nav style="display:flex; flex-direction:column; gap:2px; font-size:13.5px;">
-            <a href="#ai-query" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--ink); background:var(--warn-bg); font-weight:700; text-decoration:none;"><span class="material-symbols-outlined" style="font-size:19px; color:var(--accent-ink);">smart_toy</span> AI Insights Query</a>
-            <a href="#overview" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--ink-2); text-decoration:none;"><span class="material-symbols-outlined" style="font-size:19px;">flag</span> Core Metrics</a>
-            <a href="#friction" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--ink-2); text-decoration:none;"><span class="material-symbols-outlined" style="font-size:19px;">stacked_bar_chart</span> Friction Scores</a>
-            <a href="#themes" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--ink-2); text-decoration:none;"><span class="material-symbols-outlined" style="font-size:19px;">donut_small</span> Extracted Themes</a>
-            <a href="#signals" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--ink-2); text-decoration:none;"><span class="material-symbols-outlined" style="font-size:19px;">table_rows</span> Category Signals</a>
-            <a href="#profiles" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--ink-2); text-decoration:none;"><span class="material-symbols-outlined" style="font-size:19px;">group</span> Explorer Cohorts</a>
-        </nav>
-        <button onclick="openArchModal()" style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--ink); color:#fff; border:none; border-radius:10px; padding:11px; font-size:12.5px; font-weight:700;">
-            <span class="material-symbols-outlined" style="font-size:18px; color:var(--accent);">settings</span> View AI Pipeline
-        </button>
-        <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--border);">
-            <a href="https://blinkit-trial-confidence-layer.vercel.app/prototype/index.html" target="_blank" style="display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--muted); text-decoration:none;">
-                <span class="material-symbols-outlined" style="font-size:15px;">open_in_new</span> Live prototype app
-            </a>
+      </div>
+      <button onclick="openArchModal()" style="display:flex; align-items:center; gap:8px; background:var(--accent); color:#0F172A; border:none; border-radius:10px; padding:10px 15px; font-size:12.5px; font-weight:800;">
+        <span id="hdrPipe"></span> View AI Pipeline Architecture
+      </button>
+    </header>
+
+    <!-- 1. Executive KPIs -->
+    <section id="kpis">
+      <div class="sec-label"><span id="lb1"></span> Executive Metrics — case-study snapshot</div>
+      <div class="grid g4" style="grid-template-columns:repeat(4,1fr); margin-bottom:22px;" id="kpiRow"></div>
+    </section>
+
+    <!-- 2. AI NL Query Simulator -->
+    <section id="query" style="margin-bottom:22px;">
+      <div class="card" style="padding:20px 22px; background:linear-gradient(180deg, #1E293B 0%, #172033 100%);">
+        <div style="display:flex; align-items:center; gap:9px; margin-bottom:13px;">
+          <span id="qIcon" style="color:var(--accent);"></span>
+          <span style="font-size:15px; font-weight:800;">Ask AI Discovery Engine</span>
+          <span style="font-size:11px; color:var(--muted); font-weight:600;">Natural-language query on 5K+ reviews</span>
+          <span style="margin-left:auto; font-size:10.5px; font-weight:700; color:#0F172A; background:var(--accent); padding:2px 9px; border-radius:999px;">LLM · RAG</span>
         </div>
-    </aside>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:260px; display:flex; align-items:center; gap:9px; background:var(--raise); border:1px solid var(--border-2); border-radius:12px; padding:0 14px;">
+            <span id="qSearch" style="color:var(--faint);"></span>
+            <input id="queryInput" type="text" autocomplete="off"
+              placeholder="e.g. Why don't grocery users buy Skincare products?"
+              style="flex:1; background:transparent; border:none; outline:none; color:var(--text); font-size:13.5px; padding:13px 0;"
+              onkeypress="if(event.key==='Enter'){runQuery(this.value)}">
+          </div>
+          <button onclick="runQuery(document.getElementById('queryInput').value)"
+            style="background:var(--accent); color:#0F172A; border:none; border-radius:12px; padding:0 22px; font-size:13.5px; font-weight:800; display:flex; align-items:center; gap:7px;">
+            <span id="qBolt"></span> Analyze
+          </button>
+        </div>
+        <div style="display:flex; gap:9px; flex-wrap:wrap; margin-top:12px;" id="queryChips"></div>
+      </div>
+      <div id="queryOutput" style="margin-top:14px;"></div>
+    </section>
 
-    <!-- Report canvas -->
-    <main style="flex:1; min-width:0; overflow-x:hidden; padding:20px 24px; max-width:1440px;">
-        <header style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <img src="blinkit-logo.svg" alt="blinkit" style="width:44px; height:44px; border-radius:11px; flex-shrink:0;">
-                <div>
-                    <h1 style="font-size:20px; font-weight:800; margin:0;">AI Review Analysis &amp; Discovery Engine</h1>
-                    <p style="font-size:12.5px; color:var(--muted); margin:3px 0 0;">Cross-Category Adoption · Trial Confidence Layer · Growth PM case study</p>
-                </div>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button onclick="openArchModal()" style="display:flex; align-items:center; gap:7px; background:var(--ink); color:#fff; border:none; border-radius:10px; padding:9px 14px; font-size:12.5px; font-weight:700;">
-                    <span class="material-symbols-outlined" style="font-size:18px; color:var(--accent);">settings</span> View AI Pipeline Architecture
-                </button>
-                <span id="lastRefreshed" style="font-size:11px; color:var(--muted);"></span>
-                <span id="dataSourceBadge" style="font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:999px; background:#eef0ee; color:var(--muted);">Loading…</span>
-            </div>
-        </header>
+    <!-- 3. Friction Heatmap -->
+    <section id="clusters" style="margin-bottom:22px;">
+      <div class="sec-label"><span id="lb3"></span> Review Clustering &amp; Friction Heatmap — negative-sentiment breakdown</div>
+      <div class="grid g2" style="grid-template-columns:1.35fr 1fr;">
+        <div class="card" style="padding:18px 20px;" id="clusterCard"></div>
+        <div class="card" style="padding:18px 20px; display:flex; flex-direction:column;">
+          <div style="font-size:12.5px; font-weight:700; color:var(--text-2); margin-bottom:12px;">Cluster share of negative reviews</div>
+          <div style="flex:1; min-height:200px; position:relative;"><canvas id="clusterChart"></canvas></div>
+        </div>
+      </div>
+      <div id="pmStrategy" style="margin-top:14px;"></div>
+    </section>
 
-        <!-- FEATURE 1: AI Insights Query Bar -->
-        <section id="ai-query" style="margin-bottom:16px;">
-            <div class="tile" style="background:var(--ink); border:none; padding:20px 22px;">
-                <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px;">
-                    <span class="material-symbols-outlined" style="font-size:22px; color:var(--accent);">auto_awesome</span>
-                    <span style="font-size:15px; font-weight:800; color:#fff;">Ask the AI Discovery Engine</span>
-                    <span style="font-size:10.5px; font-weight:700; color:var(--ink); background:var(--accent); padding:2px 8px; border-radius:999px; margin-left:2px;">LIVE + GROUNDED</span>
-                </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:260px; display:flex; align-items:center; gap:8px; background:#1d1d1d; border:1px solid #333; border-radius:12px; padding:0 14px;">
-                        <span class="material-symbols-outlined" style="font-size:20px; color:#8a8a8a;">search</span>
-                        <input id="discoveryInput" type="text" autocomplete="off"
-                            placeholder="Ask the AI Engine (e.g., 'Why do users hesitate to buy Pet Care or Personal Care?')"
-                            style="flex:1; background:transparent; border:none; outline:none; color:#fff; font-size:13.5px; padding:13px 0;"
-                            onkeypress="if(event.key==='Enter'){runDiscoveryQuery(this.value)}">
-                    </div>
-                    <button onclick="runDiscoveryQuery(document.getElementById('discoveryInput').value)"
-                        style="background:var(--accent); color:var(--ink); border:none; border-radius:12px; padding:0 22px; font-size:13.5px; font-weight:800; display:flex; align-items:center; gap:7px;">
-                        <span class="material-symbols-outlined" style="font-size:19px;">bolt</span> Synthesize
-                    </button>
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;" id="promptChips"></div>
-            </div>
-            <!-- synthesis output renders here -->
-            <div id="synthesisOutput" style="margin-top:14px;"></div>
-        </section>
+    <!-- 4. MVP Bridge -->
+    <section id="bridge" style="margin-bottom:20px;"></section>
 
-        <!-- FEATURE 3: Core Metrics -->
-        <section id="overview">
-            <div class="sec-label"><span class="material-symbols-outlined" style="font-size:16px;">flag</span> PM Core Metrics — case-study goal</div>
-            <div class="grid g3" style="grid-template-columns: repeat(3, 1fr); margin-bottom:16px;" id="coreMetrics"></div>
-        </section>
-
-        <!-- North Star gauge + supporting donuts -->
-        <section id="visuals">
-            <div class="grid g3" style="grid-template-columns: 1.1fr 1fr 1fr; margin-bottom:16px;">
-                <div class="tile">
-                    <div class="tile-title">North Star — Cross-Category MAU Adoption</div>
-                    <div class="tile-sub">progress toward 25% target</div>
-                    <div style="position:relative; height:186px;"><canvas id="ccarGauge"></canvas>
-                        <div id="gaugeCenter" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-top:22px; pointer-events:none;"></div>
-                    </div>
-                </div>
-                <div class="tile">
-                    <div class="tile-title">Category Density Mix</div>
-                    <div class="tile-sub">dense vs sparse corpus signal</div>
-                    <div style="position:relative; height:186px;"><canvas id="densityDonut"></canvas>
-                        <div id="densityCenter" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;"></div>
-                    </div>
-                </div>
-                <div class="tile" id="themes">
-                    <div class="tile-title">Extracted Review Themes — Electronics</div>
-                    <div class="tile-sub">friction clusters from real reviews</div>
-                    <div style="position:relative; height:186px;"><canvas id="complaintDonut"></canvas></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FEATURE 3: Friction Scores -->
-        <section id="friction" style="margin-bottom:16px;">
-            <div class="sec-label"><span class="material-symbols-outlined" style="font-size:16px;">stacked_bar_chart</span> Category Exploration Friction Scores</div>
-            <div class="grid g2" style="grid-template-columns: 1.15fr 1fr;">
-                <div class="tile" style="padding:0; overflow:hidden;">
-                    <div style="overflow-x:auto;">
-                        <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                            <thead>
-                                <tr style="text-align:left; color:var(--muted); font-size:11px; letter-spacing:.03em; text-transform:uppercase; border-bottom:1px solid var(--grid);">
-                                    <th style="padding:12px 18px; font-weight:700;">Category</th>
-                                    <th style="padding:12px 12px; font-weight:700;">Friction</th>
-                                    <th style="padding:12px 12px; font-weight:700; text-align:right;">Score</th>
-                                    <th style="padding:12px 18px; font-weight:700;">Why</th>
-                                </tr>
-                            </thead>
-                            <tbody id="frictionBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="tile">
-                    <div class="tile-title">Friction by category</div>
-                    <div class="tile-sub">0 = frictionless habitual lane · 100 = trial-blocking</div>
-                    <div style="height:250px;"><canvas id="frictionChart"></canvas></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Supporting analytics -->
-        <section style="margin-bottom:16px;">
-            <div class="grid g2" style="grid-template-columns: 1fr 1fr;">
-                <div class="tile">
-                    <div class="tile-title">Category Abandonment Rate</div>
-                    <div class="tile-sub" id="abandonNote"></div>
-                    <div style="height:250px;"><canvas id="abandonChart"></canvas></div>
-                </div>
-                <div class="tile">
-                    <div class="tile-title">Category Signal Density</div>
-                    <div class="tile-sub">corpus mentions · green = dense, amber = sparse</div>
-                    <div style="height:250px;"><canvas id="densityBar"></canvas></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Category signals table -->
-        <section id="signals" style="margin-bottom:16px;">
-            <div class="tile" style="padding:0; overflow:hidden;">
-                <div style="padding:15px 18px 6px;">
-                    <div class="tile-title">Category Trust Signals</div>
-                    <div class="tile-sub">real ratings &amp; corpus density per L2 category</div>
-                </div>
-                <div style="overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                        <thead>
-                            <tr style="text-align:left; color:var(--muted); font-size:11px; letter-spacing:.03em; text-transform:uppercase; border-bottom:1px solid var(--grid);">
-                                <th style="padding:10px 18px; font-weight:700;">Category</th>
-                                <th style="padding:10px 18px; font-weight:700; text-align:right;">Corpus Mentions</th>
-                                <th style="padding:10px 18px; font-weight:700; text-align:right;">Avg Rating</th>
-                                <th style="padding:10px 18px; font-weight:700;">Density</th>
-                            </tr>
-                        </thead>
-                        <tbody id="categoryTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- Explorer cohorts -->
-        <section id="profiles" style="margin-bottom:16px;">
-            <div class="sec-label"><span class="material-symbols-outlined" style="font-size:16px;">group</span> Category-Exploration Cohorts</div>
-            <div id="profilesGrid" class="grid g3" style="grid-template-columns:repeat(3, 1fr);"></div>
-        </section>
-
-        <footer style="font-size:11px; color:var(--muted); padding-top:14px; border-top:1px solid var(--border);">
-            AI Discovery Engine — reads live data from the Blinkit prototype (snapshot fallback if unreachable). Synthesis grounded in the project's research corpus &amp; interviews. Read-only; does not modify the main app.
-        </footer>
-    </main>
+    <footer style="font-size:11px; color:var(--faint); padding-top:14px; border-top:1px solid var(--border);">
+      PM Analytics Control Center · insights grounded in the project's research corpus (5,000+ public reviews + 7 interviews). Bridges directly to the live Trial &amp; Confidence MVP.
+    </footer>
+  </main>
 </div>
 
-<!-- FEATURE 2: AI Pipeline Architecture modal -->
+<!-- AI Pipeline modal -->
 <div class="modal-overlay" id="archModal" onclick="if(event.target===this)closeArchModal()">
-    <div class="modal-card">
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border);">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span class="material-symbols-outlined" style="font-size:24px; color:var(--accent-ink);">account_tree</span>
-                <div>
-                    <div style="font-size:16px; font-weight:800;">AI Review-Analysis Pipeline</div>
-                    <div style="font-size:11.5px; color:var(--muted);">How raw public feedback becomes an actionable PM insight</div>
-                </div>
-            </div>
-            <button onclick="closeArchModal()" style="background:#f0f1ef; border:none; border-radius:999px; width:34px; height:34px; display:flex; align-items:center; justify-content:center;">
-                <span class="material-symbols-outlined" style="font-size:20px; color:var(--ink-2);">close</span>
-            </button>
-        </div>
-        <div style="padding:26px 24px;">
-            <div class="flow" style="display:flex; align-items:stretch; gap:0;" id="pipelineFlow"></div>
-            <div style="margin-top:22px; display:flex; align-items:center; gap:10px; background:var(--good-bg); border-radius:12px; padding:14px 16px;">
-                <span class="material-symbols-outlined" style="font-size:22px; color:var(--good);">verified</span>
-                <div style="font-size:13px; color:var(--ink);"><b>Validated via 5,000+ public reviews</b> across Blinkit, Instamart, and Zepto — sampled, PII-scrubbed, and QA-checked before any insight is surfaced.</div>
-            </div>
-        </div>
+  <div class="card" style="max-width:1060px; width:100%; max-height:90vh; overflow-y:auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border);">
+      <div style="display:flex; align-items:center; gap:11px;">
+        <span id="mIcon" style="color:var(--accent);"></span>
+        <div><div style="font-size:16px; font-weight:800;">End-to-End AI Discovery Pipeline</div>
+        <div style="font-size:11.5px; color:var(--muted);">Raw reviews → clustered insight → executable MVP</div></div>
+      </div>
+      <button onclick="closeArchModal()" style="background:var(--surface2); border:1px solid var(--border-2); border-radius:999px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; color:var(--text-2);"><span id="mClose"></span></button>
     </div>
+    <div style="padding:26px 24px;">
+      <div class="flow" style="display:flex; align-items:stretch; gap:0;" id="pipelineFlow"></div>
+      <div style="margin-top:22px; display:flex; align-items:center; gap:10px; background:var(--emerald-dim); border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:14px 16px;">
+        <span id="mVerify" style="color:var(--emerald);"></span>
+        <div style="font-size:13px; color:var(--text-2);"><b style="color:var(--text);">Validated on 5,420 public reviews</b> across Blinkit, Instamart &amp; Zepto — clustered, QA-sampled, and mapped to the shipped Trial &amp; Confidence MVP.</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="dashboard.js"></script>
