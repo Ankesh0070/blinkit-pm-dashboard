@@ -1,41 +1,36 @@
 // PM Insights Assistant — answers questions about THIS project's strategy,
 // metrics, and methodology (CCAR, phases, edge cases, guardrails), grounded
 // server-side in the condensed DOCS/ knowledge base plus whatever live/
-// snapshot dashboard data this page has loaded (see dashboard.js).
+// snapshot dashboard data this page has loaded (see dashboard.js). Light theme,
+// inline styles (no Tailwind on this page).
 let pmChatHistory = [];
 let isPmChatOpen = false;
+
+const PMC = { accent: '#2a78d6', accent2: '#4a3aa7', ink: '#0b0b0b', ink2: '#52514e', muted: '#898781', border: 'rgba(11,11,11,0.10)', surface: '#ffffff', panel: '#f4f4f2' };
 
 function injectPmChatbot() {
     if (document.getElementById('pmChatWidget')) return;
     const html = `
-    <div id="pmChatWidget" class="fixed bottom-8 right-8 z-[110] flex flex-col items-end pointer-events-none">
-        <div id="pmChatWindow" class="pointer-events-none opacity-0 scale-90 w-[380px] h-[520px] max-h-[75vh] bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 flex flex-col overflow-hidden mb-4 transition-[opacity,transform] duration-200 ease-out origin-bottom-right">
-            <div class="bg-gradient-to-r from-sky-600 to-indigo-600 flex items-center justify-between p-4 text-white">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined">insights</span>
-                    <span class="font-semibold text-sm">PM Insights Assistant</span>
+    <div id="pmChatWidget" style="position:fixed; bottom:26px; right:26px; z-index:110; display:flex; flex-direction:column; align-items:flex-end; pointer-events:none;">
+        <div id="pmChatWindow" style="pointer-events:none; opacity:0; transform:scale(.9); width:380px; height:520px; max-height:75vh; background:${PMC.surface}; border-radius:16px; box-shadow:0 12px 40px rgba(11,11,11,.18); border:1px solid ${PMC.border}; display:flex; flex-direction:column; overflow:hidden; margin-bottom:14px; transition:opacity .2s ease, transform .2s ease; transform-origin:bottom right;">
+            <div style="background:linear-gradient(135deg, ${PMC.accent}, ${PMC.accent2}); display:flex; align-items:center; justify-content:space-between; padding:14px 16px; color:#fff;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="font-size:20px;">insights</span>
+                    <span style="font-weight:600; font-size:14px;">PM Insights Assistant</span>
                 </div>
-                <button onclick="togglePmChat()" class="hover:bg-white/10 rounded-full p-1 transition-colors">
-                    <span class="material-symbols-outlined text-lg">close</span>
-                </button>
+                <button onclick="togglePmChat()" style="background:transparent; border:none; color:#fff; cursor:pointer; display:flex; padding:2px; border-radius:999px;"><span class="material-symbols-outlined" style="font-size:20px;">close</span></button>
             </div>
-            <div id="pmChatMessages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-slate-950">
-                <div class="self-start max-w-[90%] bg-slate-800 p-3 rounded-2xl rounded-tl-sm text-slate-200 text-sm border border-slate-700 whitespace-pre-wrap">
-Hi! Ask me anything about this project — CCAR, why electronics launched first, the edge cases, the phased rollout, guardrails, or the current dashboard numbers.
+            <div id="pmChatMessages" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; background:${PMC.panel};">
+                <div style="align-self:flex-start; max-width:90%; background:${PMC.surface}; padding:12px; border-radius:14px 14px 14px 4px; color:${PMC.ink}; font-size:13px; border:1px solid ${PMC.border}; white-space:pre-wrap; line-height:1.5;">Hi! Ask me anything about this project — CCAR, why electronics launched first, the edge cases, the rollout, guardrails, or the current dashboard numbers.
 
-Aap Hindi ya kisi bhi Indian language mein bhi pooch sakte hain.
-                </div>
+Aap Hindi ya kisi bhi Indian language mein bhi pooch sakte hain.</div>
             </div>
-            <div class="p-3 bg-slate-900 border-t border-slate-700 flex gap-2 items-center">
-                <input type="text" id="pmChatInput" placeholder="Ask about CCAR, phases, edge cases..." class="flex-1 bg-slate-800 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/50 text-slate-100 border-none placeholder:text-slate-500" onkeypress="handlePmChatKeyPress(event)">
-                <button onclick="sendPmMessage()" class="bg-sky-600 text-white p-2 rounded-full hover:bg-sky-500 transition-colors flex items-center justify-center shadow-md">
-                    <span class="material-symbols-outlined text-[20px]">send</span>
-                </button>
+            <div style="padding:12px; background:${PMC.surface}; border-top:1px solid ${PMC.border}; display:flex; gap:8px; align-items:center;">
+                <input type="text" id="pmChatInput" placeholder="Ask about CCAR, research, edge cases..." style="flex:1; background:${PMC.panel}; border:1px solid ${PMC.border}; border-radius:999px; padding:9px 15px; font-size:13px; color:${PMC.ink}; outline:none;" onkeypress="handlePmChatKeyPress(event)">
+                <button onclick="sendPmMessage()" style="background:${PMC.accent}; border:none; color:#fff; cursor:pointer; padding:9px; border-radius:999px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(42,120,214,.35);"><span class="material-symbols-outlined" style="font-size:20px;">send</span></button>
             </div>
         </div>
-        <button id="pmChatFab" onclick="togglePmChat()" class="pointer-events-auto w-14 h-14 bg-gradient-to-br from-sky-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center">
-            <span class="material-symbols-outlined text-3xl">insights</span>
-        </button>
+        <button id="pmChatFab" onclick="togglePmChat()" style="pointer-events:auto; width:56px; height:56px; background:linear-gradient(135deg, ${PMC.accent}, ${PMC.accent2}); border:none; color:#fff; border-radius:999px; box-shadow:0 6px 20px rgba(42,120,214,.4); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform .15s ease;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'"><span class="material-symbols-outlined" style="font-size:28px;">insights</span></button>
     </div>`;
     document.body.insertAdjacentHTML('beforeend', html);
 }
@@ -44,11 +39,10 @@ function togglePmChat() {
     const win = document.getElementById('pmChatWindow');
     isPmChatOpen = !isPmChatOpen;
     if (isPmChatOpen) {
-        win.classList.remove('pointer-events-none', 'opacity-0', 'scale-90');
-        win.classList.add('pointer-events-auto', 'opacity-100', 'scale-100');
+        win.style.pointerEvents = 'auto'; win.style.opacity = '1'; win.style.transform = 'scale(1)';
+        setTimeout(() => document.getElementById('pmChatInput').focus(), 100);
     } else {
-        win.classList.remove('pointer-events-auto', 'opacity-100', 'scale-100');
-        win.classList.add('pointer-events-none', 'opacity-0', 'scale-90');
+        win.style.pointerEvents = 'none'; win.style.opacity = '0'; win.style.transform = 'scale(.9)';
     }
 }
 
@@ -57,9 +51,8 @@ function handlePmChatKeyPress(e) { if (e.key === 'Enter') sendPmMessage(); }
 function appendPmMessage(role, content) {
     const messagesDiv = document.getElementById('pmChatMessages');
     const div = document.createElement('div');
-    div.className = `max-w-[90%] p-3 rounded-2xl text-sm border whitespace-pre-wrap ${
-        role === 'user' ? 'self-end bg-sky-600/20 border-sky-700/40 text-sky-100 rounded-tr-sm' : 'self-start bg-slate-800 border-slate-700 text-slate-200 rounded-tl-sm'
-    }`;
+    const user = role === 'user';
+    div.style.cssText = `align-self:${user ? 'flex-end' : 'flex-start'}; max-width:90%; padding:12px; border-radius:${user ? '14px 14px 4px 14px' : '14px 14px 14px 4px'}; font-size:13px; line-height:1.5; white-space:pre-wrap; border:1px solid ${PMC.border}; background:${user ? '#eaf2fc' : PMC.surface}; color:${user ? '#123a63' : PMC.ink};`;
     div.textContent = content;
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -70,20 +63,22 @@ function appendPmLoading() {
     const div = document.createElement('div');
     const id = 'pm-loading-' + Date.now();
     div.id = id;
-    div.className = 'self-start max-w-[85%] bg-slate-800 p-3 rounded-2xl rounded-tl-sm flex gap-1 items-center border border-slate-700 h-10';
-    div.innerHTML = '<div class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div><div class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div><div class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div>';
+    div.style.cssText = `align-self:flex-start; max-width:85%; background:${PMC.surface}; padding:14px; border-radius:14px 14px 14px 4px; display:flex; gap:5px; align-items:center; border:1px solid ${PMC.border};`;
+    div.innerHTML = `<span style="width:6px;height:6px;background:${PMC.muted};border-radius:999px;display:inline-block;animation:pmb 1s infinite;"></span><span style="width:6px;height:6px;background:${PMC.muted};border-radius:999px;display:inline-block;animation:pmb 1s infinite .15s;"></span><span style="width:6px;height:6px;background:${PMC.muted};border-radius:999px;display:inline-block;animation:pmb 1s infinite .3s;"></span>`;
+    if (!document.getElementById('pmbKeyframes')) {
+        const st = document.createElement('style'); st.id = 'pmbKeyframes';
+        st.textContent = '@keyframes pmb{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}';
+        document.head.appendChild(st);
+    }
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
     return id;
 }
 function removePmLoading(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
-// Local, no-AI fallback so the widget still says something useful if both
-// Gemini and Groq are unreachable (offline demo, no keys, etc.).
 function localPmFallback(text) {
-    const t = text.toLowerCase();
-    if (t.includes('ccar')) return 'CCAR (Cross-Category Activation Rate) is the North Star metric: % of Monthly Active Customers who buy from at least 1 new L2 category in a month, with a 90-day lookback window. (AI assistant is offline — this is a canned answer.)';
-    return "I couldn't reach the AI assistant right now (offline or no API key configured). Try again shortly, or check /api/health.";
+    if (text.toLowerCase().includes('ccar')) return 'CCAR (Cross-Category Activation Rate) is the North Star: % of Monthly Active Customers who buy from at least 1 new L2 category in a month, with a 90-day lookback. (AI assistant is offline — canned answer.)';
+    return "I couldn't reach the AI assistant right now (offline or no API key). Try again shortly, or check /api/health.";
 }
 
 async function sendPmMessage() {
@@ -99,8 +94,7 @@ async function sendPmMessage() {
     try {
         const dataFacts = (typeof buildDataFacts === 'function') ? buildDataFacts() : null;
         const res = await fetch('/api/pm-chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ messages: pmChatHistory.slice(-8), dataFacts }),
             signal: AbortSignal.timeout(15000)
         });
