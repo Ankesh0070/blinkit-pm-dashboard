@@ -6,7 +6,7 @@
 let pmChatHistory = [];
 let isPmChatOpen = false;
 
-const PMC = { accent: '#2a78d6', accent2: '#4a3aa7', ink: '#0b0b0b', ink2: '#52514e', muted: '#898781', border: 'rgba(11,11,11,0.10)', surface: '#ffffff', panel: '#f4f4f2' };
+const PMC = { accent: '#111111', accent2: '#333333', ink: '#111111', ink2: '#45454a', muted: '#85858c', border: 'rgba(17,17,17,0.10)', surface: '#ffffff', panel: '#f4f4f2' };
 
 function injectPmChatbot() {
     if (document.getElementById('pmChatWidget')) return;
