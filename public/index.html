@@ -48,8 +48,10 @@
     </div>
     <nav style="display:flex; flex-direction:column; gap:2px; font-size:13.5px;">
       <a href="#kpis" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--text); background:var(--accent-dim); font-weight:700;"><span id="nv1"></span> Executive KPIs</a>
-      <a href="#query" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv2"></span> AI Query Engine</a>
+      <a href="#workflow" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv2"></span> Review Workflow</a>
+      <a href="#questions" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nvQ"></span> 8 Discovery Q&amp;A</a>
       <a href="#clusters" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv3"></span> Friction Heatmap</a>
+      <a href="#validation" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nvV"></span> Insight Validation</a>
       <a href="#bridge" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv4"></span> MVP Bridge</a>
     </nav>
     <button onclick="openArchModal()" style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border-2); border-radius:10px; padding:11px; font-size:12.5px; font-weight:700;">
@@ -80,31 +82,38 @@
       <div class="grid g4" style="grid-template-columns:repeat(4,1fr); margin-bottom:22px;" id="kpiRow"></div>
     </section>
 
-    <!-- 2. AI NL Query Simulator -->
-    <section id="query" style="margin-bottom:22px;">
-      <div class="card" style="padding:20px 22px; background:linear-gradient(180deg, #1E293B 0%, #172033 100%);">
-        <div style="display:flex; align-items:center; gap:9px; margin-bottom:13px;">
-          <span id="qIcon" style="color:var(--accent);"></span>
-          <span style="font-size:15px; font-weight:800;">Ask AI Discovery Engine</span>
-          <span style="font-size:11px; color:var(--muted); font-weight:600;">Natural-language query on 5K+ reviews</span>
-          <span style="margin-left:auto; font-size:10.5px; font-weight:700; color:#0F172A; background:var(--accent); padding:2px 9px; border-radius:999px;">LLM · RAG</span>
+    <!-- 2. LIVE Review-Analysis Workflow (the runnable Part-1 pipeline) -->
+    <section id="workflow" style="margin-bottom:22px;">
+      <div class="sec-label"><span id="lbWf"></span> Live Review-Analysis Workflow — paste or upload real reviews &amp; run the AI pipeline</div>
+      <div class="card" style="padding:18px 20px;">
+        <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px; flex-wrap:wrap;">
+          <span id="wfIcon" style="color:var(--accent);"></span>
+          <span style="font-size:14px; font-weight:800;">Input: raw user reviews</span>
+          <span style="font-size:11px; color:var(--muted);">Play Store · App Store · Reddit · forums — one per line</span>
+          <span style="margin-left:auto; font-size:10.5px; font-weight:700; color:#0F172A; background:var(--accent); padding:2px 9px; border-radius:999px;">LIVE LLM</span>
         </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:260px; display:flex; align-items:center; gap:9px; background:var(--raise); border:1px solid var(--border-2); border-radius:12px; padding:0 14px;">
-            <span id="qSearch" style="color:var(--faint);"></span>
-            <input id="queryInput" type="text" autocomplete="off"
-              placeholder="e.g. Why don't grocery users buy Skincare products?"
-              style="flex:1; background:transparent; border:none; outline:none; color:var(--text); font-size:13.5px; padding:13px 0;"
-              onkeypress="if(event.key==='Enter'){runQuery(this.value)}">
-          </div>
-          <button onclick="runQuery(document.getElementById('queryInput').value)"
-            style="background:var(--accent); color:#0F172A; border:none; border-radius:12px; padding:0 22px; font-size:13.5px; font-weight:800; display:flex; align-items:center; gap:7px;">
-            <span id="qBolt"></span> Analyze
+        <textarea id="reviewInput" spellcheck="false"
+          style="width:100%; height:150px; resize:vertical; background:var(--raise); border:1px solid var(--border-2); border-radius:12px; padding:12px 14px; color:var(--text); font-size:12.5px; line-height:1.55; outline:none; font-family:ui-monospace,Menlo,Consolas,monospace;"></textarea>
+        <div style="display:flex; gap:9px; flex-wrap:wrap; margin-top:11px; align-items:center;">
+          <button onclick="runWorkflow()" id="runBtn"
+            style="background:var(--accent); color:#0F172A; border:none; border-radius:11px; padding:11px 20px; font-size:13px; font-weight:800; display:flex; align-items:center; gap:7px;">
+            <span id="wfBolt"></span> Run AI Analysis
           </button>
+          <button onclick="loadSampleReviews()"
+            style="background:var(--surface2); color:var(--text-2); border:1px solid var(--border-2); border-radius:11px; padding:11px 16px; font-size:12.5px; font-weight:700;">Load sample reviews</button>
+          <label style="background:var(--surface2); color:var(--text-2); border:1px solid var(--border-2); border-radius:11px; padding:11px 16px; font-size:12.5px; font-weight:700; cursor:pointer;">
+            Upload .txt / .csv <input type="file" accept=".txt,.csv,text/plain" onchange="uploadReviews(event)" style="display:none;">
+          </label>
+          <span id="reviewMeta" style="font-size:11px; color:var(--muted); margin-left:auto;"></span>
         </div>
-        <div style="display:flex; gap:9px; flex-wrap:wrap; margin-top:12px;" id="queryChips"></div>
       </div>
-      <div id="queryOutput" style="margin-top:14px;"></div>
+      <div id="workflowOutput" style="margin-top:14px;"></div>
+    </section>
+
+    <!-- 2b. Consolidated answers to the 8 discovery questions -->
+    <section id="questions" style="margin-bottom:22px;">
+      <div class="sec-label"><span id="lbQ"></span> The 8 Discovery Questions — consolidated answers (corpus + 7 interviews)</div>
+      <div class="grid g4" id="questionGrid" style="grid-template-columns:repeat(2,1fr);"></div>
     </section>
 
     <!-- 3. Friction Heatmap -->
@@ -118,6 +127,21 @@
         </div>
       </div>
       <div id="pmStrategy" style="margin-top:14px;"></div>
+    </section>
+
+    <!-- 3b. Insight Validation -->
+    <section id="validation" style="margin-bottom:22px;">
+      <div class="sec-label"><span id="lbV"></span> How the insights were validated — quality control</div>
+      <div class="grid g2" style="grid-template-columns:0.9fr 1.2fr;">
+        <div class="card" style="padding:18px 20px;" id="methodCard"></div>
+        <div class="card" style="padding:0; overflow:hidden;">
+          <div style="padding:15px 18px 6px;">
+            <div style="font-size:12.5px; font-weight:700; color:var(--text-2);">AI hypothesis → primary-research outcome</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;">corpus-derived hypotheses tested against the 7 interviews</div>
+          </div>
+          <div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:12.5px;" id="validationTable"></table></div>
+        </div>
+      </div>
     </section>
 
     <!-- 4. MVP Bridge -->

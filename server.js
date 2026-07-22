@@ -156,6 +156,73 @@ async function callGroq(systemPrompt, messages) {
     return parsePmJson(data.choices[0].message.content);
 }
 
+// ---- Raw single-shot LLM callers (for the review-analysis workflow) ----
+async function geminiRaw(systemPrompt, userText) {
+    if (!process.env.GEMINI_API_KEY) throw new Error("Gemini key not configured");
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: 'user', parts: [{ text: userText }] }] })
+    });
+    const d = await r.json(); if (d.error) throw new Error(d.error.message);
+    const raw = d.candidates?.[0]?.content?.parts?.[0]?.text; if (!raw) throw new Error("Empty Gemini response"); return raw;
+}
+async function groqRaw(systemPrompt, userText) {
+    if (!process.env.GROQ_API_KEY) throw new Error("Groq key not configured");
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST', headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userText }], temperature: 0.3 })
+    });
+    const d = await r.json(); if (d.error) throw new Error(d.error.message);
+    return d.choices[0].message.content;
+}
+
+// ---- Live Review-Analysis Workflow: ingest raw reviews -> structured analysis ----
+// This is the actual runnable Part-1 pipeline: the reviewer pastes/uploads real
+// review text, the LLM clusters it into friction themes, scores sentiment,
+// extracts keywords + verbatim quotes, and maps findings to the 8 discovery
+// questions. Gemini-primary / Groq-fallback.
+const ANALYSIS_PROMPT = `You are the Review-Analysis Engine for a quick-commerce cross-category discovery project. The user base is habituated to Groceries/Snacks/Household and rarely tries new categories (Personal Care, Pet, Baby). Analyze ONLY the raw user reviews the user message contains.
+Cluster them into friction themes, compute an overall sentiment split, extract the most frequent keywords, pull 2-4 VERBATIM representative quotes (copy exact phrases from the input), and map findings to the discovery questions.
+Respond with ONLY a JSON object, no markdown fences, in this exact shape:
+{
+ "reviews_analyzed": <int>,
+ "sentiment": { "negative": <int percent>, "neutral": <int percent>, "positive": <int percent> },
+ "themes": [ { "name": "<short friction theme>", "share": <int percent of reviews>, "sentiment": "negative"|"neutral"|"positive", "quote": "<verbatim phrase from input>" } ],
+ "keywords": ["<keyword>", ...],
+ "question_insights": {
+   "why_repeat_same_categories": "<one grounded sentence>",
+   "what_prevents_new_categories": "<one grounded sentence>",
+   "how_users_discover_today": "<one grounded sentence>",
+   "role_of_habits": "<one grounded sentence>",
+   "info_needed_before_trying": "<one grounded sentence>",
+   "recurring_frustrations": "<one grounded sentence>",
+   "segments_likely_to_experiment": "<one grounded sentence>",
+   "unmet_needs": "<one grounded sentence>"
+ },
+ "top_insight": "<the single most actionable PM insight, one sentence>"
+}
+Percentages must sum to 100 within each object. Base EVERY field only on the provided reviews; keep quotes verbatim. If a question isn't evidenced, say "Not strongly evidenced in this sample."`;
+
+app.post('/api/analyze-reviews', async (req, res) => {
+    const { reviews } = req.body;
+    const list = Array.isArray(reviews) ? reviews : String(reviews || '').split('\n');
+    const clean = list.map(s => String(s).trim()).filter(Boolean);
+    if (!clean.length) return res.status(400).json({ error: "No reviews provided" });
+    const userText = clean.map((r, i) => `${i + 1}. ${r}`).join('\n');
+    try {
+        let raw;
+        try { raw = await geminiRaw(ANALYSIS_PROMPT, userText); }
+        catch (ge) { console.warn("Gemini analysis failed, Groq fallback:", ge.message); raw = await groqRaw(ANALYSIS_PROMPT, userText); }
+        const txt = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+        let parsed; try { parsed = JSON.parse(txt); } catch (e) { throw new Error("Model returned unparseable output"); }
+        if (!parsed.reviews_analyzed) parsed.reviews_analyzed = clean.length;
+        res.json({ success: true, analysis: parsed });
+    } catch (e) {
+        console.error("Review analysis error:", e);
+        res.status(500).json({ error: "Analysis failed: " + e.message });
+    }
+});
+
 app.post('/api/pm-chat', async (req, res) => {
     const { messages, dataFacts } = req.body;
     if (!messages || !messages.length) return res.status(400).json({ error: "No messages provided" });
