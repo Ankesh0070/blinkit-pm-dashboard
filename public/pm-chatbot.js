@@ -39,12 +39,36 @@ function togglePmChat() {
 }
 function handlePmChatKeyPress(e){ if(e.key==='Enter') sendPmMessage(); }
 
+// Safe HTML escape — content still comes from an LLM, so we sanitize
+// everything and then whitelist only the Markdown-style anchor links
+// [label](#section) and **bold** the LLM uses when citing dashboard sections.
+function pmSanitize(s) {
+  return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function pmMarkupToHtml(raw) {
+  let html = pmSanitize(raw);
+  // [label](#anchor) → clickable in-page link with underline + accent color.
+  // Anchors must be ASCII word chars only, no scripts.
+  html = html.replace(/\[([^\]]{1,80})\]\(#([a-zA-Z][\w-]{0,30})\)/g,
+    (_, label, anchor) => `<a href="#${anchor}" onclick="pmScrollAndClose('${anchor}')" style="color:${PMC.accent}; font-weight:800; text-decoration:underline; text-underline-offset:2px;">${label}</a>`);
+  // **bold** for emphasis.
+  html = html.replace(/\*\*([^*]{1,80})\*\*/g, '<b>$1</b>');
+  return html;
+}
+function pmScrollAndClose(anchor) {
+  const el = document.getElementById(anchor);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (isPmChatOpen) togglePmChat();
+  return false;
+}
+
 function appendPmMessage(role, content) {
   const md = document.getElementById('pmChatMessages');
   const div = document.createElement('div');
   const user = role === 'user';
   div.style.cssText = `align-self:${user?'flex-end':'flex-start'}; max-width:90%; padding:12px; border-radius:${user?'14px 14px 4px 14px':'14px 14px 14px 4px'}; font-size:13px; line-height:1.5; white-space:pre-wrap; border:1px solid ${PMC.border}; background:${user?'rgba(242,201,76,0.14)':PMC.bg}; color:${PMC.ink};`;
-  div.textContent = content;
+  if (user) div.textContent = content;
+  else      div.innerHTML   = pmMarkupToHtml(content);
   md.appendChild(div); md.scrollTop = md.scrollHeight;
 }
 function appendPmLoading() {

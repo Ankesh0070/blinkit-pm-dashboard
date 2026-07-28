@@ -89,14 +89,62 @@ const CLUSTERS = [
 ];
 
 const QUESTIONS = [
-  { q:'Why do users repeatedly buy from the same categories?', a:'Quick-commerce habit forms deep, narrow grooves — high frequency in grocery, near-zero horizontal exploration. The “Blinkit = grocery” model is reconfirmed on every high-intent open.', tag:'Pattern D' },
-  { q:'What prevents users from exploring new categories?', a:'Trying a new category is a high-risk, low-information, fee-penalised decision where one bad first trial permanently closes it — users behave rationally by not trying.', tag:'Root cause' },
-  { q:'How do users discover products today?', a:'They don’t browse — they arrive high-intent and go straight to search or a known category. Homepage banners are structurally ignored.', tag:'Pattern E' },
-  { q:'What role do habits play in shopping behaviour?', a:'Habit is both the win and the constraint: it drives retention but locks users into single lanes — category concentration becomes a single point of failure.', tag:'Context' },
-  { q:'What information do users need before trying a new category?', a:'Credible, specific peer evidence on the exact product — real reviews, ratings, repeat-purchase signals. Generic platform suggestions are explicitly rejected.', tag:'Pattern B' },
-  { q:'What frustrations emerge repeatedly?', a:'Refund/support friction dominates complaints — but that’s a symptom. The real blocker is the missing pre-purchase information that prevents the trial entirely.', tag:'Corpus' },
-  { q:'Which user segments are more likely to experiment?', a:'Habituated grocery regulars (≥1×/week, ≥3-month tenure) who already trust logistics — the shortest distance to behaviour change. Not new or emergency-only users.', tag:'Segment' },
-  { q:'What unmet needs emerge consistently?', a:'On-platform trust that substitutes for a friend’s recommendation; de-risked experimentation without a fee penalty on small baskets; consolidation into fewer trusted platforms.', tag:'Unmet need' }
+  {
+    q:'Why do users repeatedly buy from the same categories?',
+    a:'Quick-commerce forms deep, narrow habit-grooves — <b>grocery+snacks mentions (1,773) outweigh ALL non-grocery categories combined (1,011)</b> by 1.75:1 in the 32,999-item corpus, and only <b>8.0%</b> of the corpus carries any category signal at all. The "Blinkit = grocery" mental model is reconfirmed on every high-intent open.',
+    tag:'Pattern D · Habit Groove',
+    evidence:'Corpus category-share table + Pattern D',
+    link:{ href:'#clusters', label:'See Friction Heatmap →' }
+  },
+  {
+    q:'What prevents users from exploring new categories?',
+    a:'Trying a new category is a <b>high-risk, low-information, fee-penalised</b> decision, and per Pattern A one bad first trial permanently closes it. Corpus breakdown: <b>Sizing Risk 42% · Price Barrier 31% · Return Fear 18%</b> = 91% of negative reviews. Users behave rationally by not trying.',
+    tag:'Root cause · 3 clusters',
+    evidence:'Friction Heatmap · 5,420 reviews',
+    link:{ href:'#clusters', label:'See the 3 friction clusters →' }
+  },
+  {
+    q:'How do users discover products today?',
+    a:'They <b>do not browse</b> — they arrive high-intent and go straight to search or a known category (Pattern E). R1 has never noticed a homepage banner; R2 goes straight to search. Top-of-funnel banners/push notifications are <b>structurally ignored</b>, so any solution must render <i>inside</i> the flow, not compete for attention outside it.',
+    tag:'Pattern E · Discovery Bypass',
+    evidence:'Interviews R1, R2, R7 + Pattern E',
+    link:{ href:'#workflow', label:'Run the live review-analysis workflow →' }
+  },
+  {
+    q:'What role do habits play in shopping behaviour?',
+    a:'Habit is <b>both the win and the constraint</b>: it drives retention (high frequency in grocery) but locks users into single lanes, turning category concentration into a <b>single point of failure</b> (R4, the most engaged user in the sample, already churned fresh produce to a competitor). Habit reads as satisfaction to the algorithm, so nothing prompts exploration.',
+    tag:'Context · Retention paradox',
+    evidence:'Hypothesis Scorecard + R4 warning signal',
+    link:{ href:'#validation', label:'See Insight Validation →' }
+  },
+  {
+    q:'What information do users need before trying a new category?',
+    a:'Credible, <b>product-specific peer evidence</b> — R1 wants "good reviews on the specific product, not generic suggestions." <b>5 of 7</b> respondents rank reviews/brand ABOVE price. The Blinkit Trusted Program answers this with 96 rule-based curated picks (avg≥4.3, ratings≥500, repeat≥55%); every badge shows its reason ("4.9★ · 1,475+ ratings · 58% reorder").',
+    tag:'Pattern B · Peer Evidence',
+    evidence:'Blinkit Trusted Program · shipped',
+    link:{ href:'#trusted', label:'See Blinkit Trusted Program →' }
+  },
+  {
+    q:'What frustrations emerge repeatedly?',
+    a:'On the surface, refund/support friction dominates complaints (<b>3,051 of 7,925</b> forum complaints). But per hypothesis validation, that\'s a <b>symptom</b> — the real blocker is the <b>missing pre-purchase information</b> that prevents the trial entirely. Fixing refund UX without fixing pre-purchase trust would still leave the funnel broken upstream.',
+    tag:'Corpus · Symptom vs. cause',
+    evidence:'PissedConsumer complaints + hypothesis scorecard',
+    link:{ href:'#validation', label:'See hypothesis scorecard →' }
+  },
+  {
+    q:'Which user segments are more likely to experiment?',
+    a:'<b>Habituated Grocery Regulars</b> — ≥1×/week, ≥3-month tenure — who already trust Blinkit\'s logistics (shortest distance to behaviour change). Retargeted now to <b>working professionals 25-40</b> (SDEs, PMs, consultants). Out of scope: new users (<1 month, forming core habit) and emergency-only users (insufficient session volume).',
+    tag:'Segment · Habituated regulars',
+    evidence:'Segment definition · shipped personas',
+    link:{ href:'#kpis', label:'See Executive KPIs →' }
+  },
+  {
+    q:'What unmet needs emerge consistently?',
+    a:'Three unmet jobs: (1) <b>on-platform trust</b> that substitutes for a friend\'s recommendation, (2) <b>de-risked experimentation</b> without a fee penalty on small baskets, (3) <b>consolidation</b> into fewer trusted platforms so users stop leaking non-grocery discovery to Amazon/Myntra. The MVP addresses jobs 1 & 2 directly.',
+    tag:'Unmet need · MVP-linked',
+    evidence:'Trial Confidence Engine · Part 4 MVP',
+    link:{ href:'#bridge', label:'Launch the live MVP prototype →' }
+  }
 ];
 
 const METHOD = [
@@ -269,13 +317,25 @@ function renderWorkflowOutput(a){
 // ============================================================================
 function renderQuestions(){
   document.getElementById('questionGrid').innerHTML = QUESTIONS.map((q,i)=>`
-    <div class="card" style="padding:15px 17px;">
+    <div class="card" style="padding:15px 17px; display:flex; flex-direction:column;">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:7px;">
         <span style="width:24px; height:24px; border-radius:7px; background:var(--accent-dim); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800;">Q${i+1}</span>
         <span style="font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--surface2); padding:2px 8px; border-radius:999px;">${q.tag}</span>
       </div>
       <div style="font-size:13px; font-weight:800; color:var(--text); line-height:1.3;">${q.q}</div>
-      <div style="font-size:12px; color:var(--text-2); line-height:1.5; margin-top:6px;">${q.a}</div>
+      <div style="font-size:12px; color:var(--text-2); line-height:1.55; margin-top:6px;">${q.a}</div>
+
+      ${q.evidence?`
+        <div style="display:flex; align-items:center; gap:6px; margin-top:10px; padding-top:8px; border-top:1px dashed var(--border);">
+          <span style="color:var(--accent);">${icon('bulb',13)}</span>
+          <span style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:.02em;">Evidence:</span>
+          <span style="font-size:10.5px; color:var(--text-2);">${q.evidence}</span>
+        </div>`:''}
+
+      ${q.link?`
+        <a href="${q.link.href}" style="display:inline-flex; align-items:center; gap:6px; margin-top:auto; padding-top:10px; text-decoration:none; font-size:11.5px; font-weight:800; color:var(--accent);">
+          ${q.link.label} ${icon('arrow',13,2.5)}
+        </a>`:''}
     </div>`).join('');
 }
 
