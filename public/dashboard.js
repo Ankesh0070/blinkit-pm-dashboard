@@ -39,11 +39,48 @@ function icon(n, s = 18, w = 2) { return `<svg xmlns="http://www.w3.org/2000/svg
 // DATA
 // ============================================================================
 const KPIS = [
-  { icon:'msg',   label:'Total Reviews Analyzed', value:'5,420', sub:'Play Store &amp; App Store', color:C.blue,    bar:null },
+  { icon:'msg',   label:'Product Reviews (in-app)', value:'195K', sub:'across 1,150 SKUs · 50-300 per product', color:C.blue,    bar:null },
+  { icon:'verify',label:'Blinkit Trusted Picks', value:'96', sub:'8.3% of catalog · rule-based, not paid', color:C.emerald, bar:8, barMax:100 },
   { icon:'alert', label:'Cross-Category Friction Score', value:'74%', sub:'High hesitation · Personal Care', color:C.rose, bar:74 },
-  { icon:'target',label:'Top Friction Root Cause', value:'Price &amp; Pack-Size Uncertainty', valueSize:20, sub:'dominant negative cluster', color:C.amber, bar:null },
-  { icon:'trend', label:'Predicted Trial Conversion Lift', value:'+28%', sub:'with Micro-Trial &lt; ₹30', color:C.emerald, bar:28, barMax:50 }
+  { icon:'trend', label:'Predicted Trial Conversion Lift', value:'+28%', sub:'with Micro-Trial &lt; ₹30 pod', color:C.amber, bar:28, barMax:50 }
 ];
+
+// Blinkit Trusted — per-category breakdown from mark_trusted_picks.py output.
+const TRUSTED_PICKS = [
+  { cat:'jewellery',            n:8, top:'GIVA earrings — 4.6★ · 82% reorder' },
+  { cat:'books',                n:7, top:'Fingerprint — Train to Pakistan · 4.6★' },
+  { cat:'spiritual',            n:7, top:'Cycle Pure Agarbatti · 4.6★' },
+  { cat:'stationery_games',     n:7, top:'Parker Trimax Pen · 4.8★' },
+  { cat:'sports_outdoor',       n:6, top:'SS Tennis Bat Full Size · 4.5★' },
+  { cat:'pet',                  n:5, top:'Pedigree Adult 1.2kg · 4.4★' },
+  { cat:'electronics',          n:4, top:'JBL Bassheads Pro · 4.8★' },
+  { cat:'home_cleaning',        n:4, top:'Ariel Matic Quick Wash 1L · 4.5★' },
+  { cat:'cold_drinks_juices',   n:4, top:'Mountain Dew Diet 1.25L · 4.8★' },
+  { cat:'instant_frozen',       n:4, top:'Yippee Masala Noodles · 4.5★' },
+  { cat:'supplements',          n:4, top:'GNC Biozyme Whey 1kg · 4.9★' },
+  { cat:'atta_rice_dal',        n:3, top:'Fortune Multigrain Atta · 4.4★' },
+  { cat:'baby',                 n:3, top:'Himalaya Diaper Pants · 4.5★' },
+  { cat:'biscuits_bakery',      n:3, top:'Britannia Good Day · 4.5★' },
+  { cat:'dairy_bread_eggs',     n:3, top:'Amul Milk Gold 500ml · 4.7★' },
+  { cat:'intimate_personal',    n:3, top:'Durex Extra Time Pack of 20 · 4.4★' },
+  { cat:'masala_oil',           n:3, top:'Fortune Kachi Ghani 5L · 4.4★' },
+  { cat:'munchies',             n:3, top:'Bingo Magic Masala · 4.4★' },
+  { cat:'personal_care_beauty', n:3, top:'Mamaearth Niacinamide Serum · 4.7★' },
+  { cat:'pharmacy_health',      n:3, top:'Dr. Ortho Pain Relief · 4.3★' },
+  { cat:'sweet_tooth',          n:3, top:'Cadbury Dark 150g · 4.6★' },
+  { cat:'tea_coffee',           n:3, top:'Taj Mahal Green Tea · 4.5★' },
+  { cat:'vegetables_fruits',    n:3, top:'Farm Fresh Royal Gala Apple · 4.3★' }
+];
+
+const CATEGORY_DISPLAY = {
+  jewellery:'Jewellery', books:'Books', spiritual:'Spiritual', stationery_games:'Stationery & Games',
+  sports_outdoor:'Sports & Outdoor', pet:'Pet Care', electronics:'Electronics', home_cleaning:'Home Cleaning',
+  cold_drinks_juices:'Cold Drinks & Juices', instant_frozen:'Instant & Frozen', supplements:'Supplements',
+  atta_rice_dal:'Atta, Rice & Dal', baby:'Baby Care', biscuits_bakery:'Biscuits & Bakery',
+  dairy_bread_eggs:'Dairy, Bread & Eggs', intimate_personal:'Intimate Care', masala_oil:'Masala & Oil',
+  munchies:'Munchies', personal_care_beauty:'Beauty & Personal Care', pharmacy_health:'Pharmacy & Health',
+  sweet_tooth:'Sweet Tooth', tea_coffee:'Tea & Coffee', vegetables_fruits:'Vegetables & Fruits'
+};
 
 const CLUSTERS = [
   { name:'Sizing Risk', pct:42, color:C.rose,  quote:"Don't want to buy a 100ml serum without knowing if it suits my skin." },
@@ -104,7 +141,7 @@ const PIPELINE = [
 // STATIC ICONS
 // ============================================================================
 function renderStaticIcons(){
-  const m={ nv1:['grid',18], nv2:['branch',18], nvQ:['help',18], nv3:['layers',18], nvV:['verify',18], nv4:['rocket',18], nvPipe:['branch',17], hdrPipe:['branch',17],
+  const m={ nv1:['grid',18], nvT:['verify',18], nv2:['branch',18], nvQ:['help',18], nv3:['layers',18], nvV:['verify',18], nv4:['rocket',18], nvPipe:['branch',17], hdrPipe:['branch',17],
     lb1:['target',15], lbWf:['branch',15], lbQ:['help',15], lb3:['layers',15], lbV:['verify',15],
     wfIcon:['db',18], wfBolt:['bolt',18], mIcon:['branch',22], mClose:['close',19], mVerify:['verify',20] };
   for(const [id,[n,s]] of Object.entries(m)){ const el=document.getElementById(id); if(el) el.innerHTML=icon(n,s); }
@@ -332,12 +369,94 @@ async function pingProto(){
 function buildDataFacts(){
   const k=KPIS.map(x=>`${x.label.replace(/&amp;/g,'&')}: ${x.value.replace(/&lt;/g,'<')}`).join('; ');
   const cl=CLUSTERS.map(c=>`${c.name} ${c.pct}%`).join('; ');
-  return `EXECUTIVE KPIs: ${k}\nFRICTION CLUSTERS (share of negative reviews): ${cl}\nPM STRATEGY: micro-trial SKUs 10ml @ ₹15–₹29 + instant refund + one-tap return.\nEvidence base: 5,420 public reviews + 7 interviews.`;
+  const trustedTotal = TRUSTED_PICKS.reduce((s,x)=>s+x.n,0);
+  const trustedTop = TRUSTED_PICKS.slice(0,5).map(x=>`${CATEGORY_DISPLAY[x.cat]||x.cat} (${x.n})`).join(', ');
+  return `EXECUTIVE KPIs: ${k}
+FRICTION CLUSTERS (share of negative reviews): ${cl}
+PM STRATEGY: micro-trial SKUs 10ml @ ₹15–₹29 + instant refund + one-tap return.
+EVIDENCE BASE (PM analysis): 5,420 public reviews (Play Store, App Store, Reddit, PissedConsumer, YouTube, HackerNews) + 7 in-depth interviews.
+IN-APP REVIEWS (shipped social-proof layer): 194,986 reviews across 1,150 SKUs (avg 170/product), working-professional voice, per-category files lazy-loaded on PDP open.
+BLINKIT TRUSTED PROGRAM (shipped, Amazon's-Choice/Flipkart-Assured analog): ${trustedTotal} curated products (8.3% of catalog). Selection rule: avg_rating>=4.3 AND total_ratings>=500 AND repeat_purchase_pct>=55%, topped up to 3/category by composite score. Category leaders: ${trustedTop}, plus 18 more categories.
+TARGET AUDIENCE: working professionals (25-40, SDEs/PMs/consultants). Homepage hero: "Built for busy work weeks." Personas: Rohan (SDE, Bengaluru), Priya (PM, Gurugram), Ankit (Consultant, Mumbai PG).
+SORT ORDER (product grid): Trusted first, then within tier by rating × log(ratings) × repeat_purchase.
+LIVE URLS: prototype https://blinkit-trial-confidence-layer.vercel.app, dashboard https://blinkit-pm-dashboard.vercel.app`;
+}
+
+// ---- BLINKIT TRUSTED PROGRAM SECTION ----
+function renderTrustedProgram(){
+  const el = document.getElementById('trustedSection');
+  if (!el) return;
+  const total = TRUSTED_PICKS.reduce((s,x)=>s+x.n,0);
+  const rows = TRUSTED_PICKS.map(x=>`
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px 12px; font-size:12.5px;">${CATEGORY_DISPLAY[x.cat]||x.cat}</td>
+      <td style="padding:8px 12px; text-align:center; font-family:monospace; font-weight:800; color:${C.accent};">${x.n}</td>
+      <td style="padding:8px 12px; font-size:12px; color:var(--text-2);">${x.top}</td>
+    </tr>`).join('');
+  el.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="width:34px; height:34px; border-radius:9px; background:${C.accent}22; display:flex; align-items:center; justify-content:center; color:${C.accent};">${icon('verify',20,2.4)}</span>
+        <h2 style="margin:0; font-size:20px; font-weight:800;">Blinkit Trusted Program</h2>
+      </div>
+      <span style="font-size:11.5px; color:var(--muted); font-family:monospace;">Amazon's-Choice / Flipkart-Assured analog · rule-based</span>
+    </div>
+
+    <div class="grid g4" style="grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; margin-bottom:16px;">
+      <div class="card" style="padding:14px;">
+        <div style="font-size:26px; font-weight:800; color:${C.accent};">${total}</div>
+        <div style="font-size:11.5px; font-weight:700; color:var(--text-2); margin-top:4px;">Trusted Picks (of 1,150)</div>
+        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">8.3% of catalog · every category ≥3</div>
+      </div>
+      <div class="card" style="padding:14px;">
+        <div style="font-size:26px; font-weight:800; color:var(--text);">88</div>
+        <div style="font-size:11.5px; font-weight:700; color:var(--text-2); margin-top:4px;">Cleared the strict rule</div>
+        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">rating≥4.3 · ratings≥500 · repeat≥55%</div>
+      </div>
+      <div class="card" style="padding:14px;">
+        <div style="font-size:26px; font-weight:800; color:var(--text);">8</div>
+        <div style="font-size:11.5px; font-weight:700; color:var(--text-2); margin-top:4px;">Top-up (category floor)</div>
+        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">composite-score top-3 per category</div>
+      </div>
+      <div class="card" style="padding:14px;">
+        <div style="font-size:26px; font-weight:800; color:${C.emerald};">23/23</div>
+        <div style="font-size:11.5px; font-weight:700; color:var(--text-2); margin-top:4px;">Categories with a Trusted pick</div>
+        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">no empty category — full coverage</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div style="padding:12px 16px; background:var(--raise); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:13px; font-weight:800;">Per-category coverage & category leader</span>
+        <span style="font-size:10.5px; color:var(--muted); font-family:monospace;">source: mark_trusted_picks.py</span>
+      </div>
+      <div style="max-height:340px; overflow-y:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead><tr style="text-align:left; background:var(--raise); position:sticky; top:0;">
+            <th style="padding:8px 12px; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:700;">Category</th>
+            <th style="padding:8px 12px; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:700; text-align:center;">Picks</th>
+            <th style="padding:8px 12px; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:700;">Category Leader</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:14px; background:var(--accent-dim); border:1px solid rgba(242,201,76,0.3); border-radius:11px; padding:12px 14px;">
+      <div style="display:flex; align-items:center; gap:7px; margin-bottom:5px;">
+        <span style="color:var(--accent);">${icon('bulb',15)}</span>
+        <span style="font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--accent);">Why this works</span>
+      </div>
+      <div style="font-size:12.5px; color:var(--text); line-height:1.5;">
+        A rule-based badge is the honest counter to Pattern B (users reject platform-generated suggestions but do trust <b>credible peer evidence</b>). Every Trusted badge shows its reason ("4.9★ from 1,475+ ratings · 58% reorder rate") — the reason IS the trust signal. No paid placement, no black-box ranking.
+      </div>
+    </div>`;
 }
 
 function init(){
   renderStaticIcons();
   renderKpis();
+  renderTrustedProgram();
   loadSampleReviews();
   renderQuestions();
   renderClusters();

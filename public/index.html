@@ -48,6 +48,7 @@
     </div>
     <nav style="display:flex; flex-direction:column; gap:2px; font-size:13.5px;">
       <a href="#kpis" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--text); background:var(--accent-dim); font-weight:700;"><span id="nv1"></span> Executive KPIs</a>
+      <a href="#trusted" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nvT"></span> Blinkit Trusted Program</a>
       <a href="#workflow" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv2"></span> Review Workflow</a>
       <a href="#questions" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nvQ"></span> 8 Discovery Q&amp;A</a>
       <a href="#clusters" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv3"></span> Friction Heatmap</a>
@@ -80,6 +81,11 @@
     <section id="kpis">
       <div class="sec-label"><span id="lb1"></span> Executive Metrics — case-study snapshot</div>
       <div class="grid g4" style="grid-template-columns:repeat(4,1fr); margin-bottom:22px;" id="kpiRow"></div>
+    </section>
+
+    <!-- 1b. Blinkit Trusted Program — curated picks, Amazon's-Choice analog -->
+    <section id="trusted" style="margin-bottom:24px;">
+      <div id="trustedSection"></div>
     </section>
 
     <!-- 2. LIVE Review-Analysis Workflow (the runnable Part-1 pipeline) -->
