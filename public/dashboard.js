@@ -97,13 +97,13 @@ const DENSITY_PHASES = [
 
 // 7 interviewees (from ProblemStatement.md § 3.2)
 const INTERVIEWEES = [
-  { id:'R1', role:'Housewife',            age:30, quote:'Cost triples for small volume/low price items due to delivery charge.', highlight:'Pattern C · fees on small trials', color:C.amber },
-  { id:'R2', role:'Working Professional', age:24, quote:'Never browses the homescreen; goes straight to search.',              highlight:'Pattern E · discovery bypass',     color:C.blue },
-  { id:'R3', role:'Government Employee',  age:36, quote:'A tomato hardened but never rotted — no fresh item since.',          highlight:'Pattern A · first-experience determinism', color:C.rose },
-  { id:'R4', role:'Housewife',            age:31, quote:'Most engaged user — churned fresh produce to a competitor.',          highlight:'Warning signal · category churn',  color:C.rose },
+  { id:'R1', role:'Marketing Manager',    age:30, quote:'Cost triples for small volume/low price items due to delivery charge.', highlight:'Pattern C · fees on small trials', color:C.amber },
+  { id:'R2', role:'SDE @ Fintech',        age:24, quote:'Never browses the homescreen; goes straight to search.',              highlight:'Pattern E · discovery bypass',     color:C.blue },
+  { id:'R3', role:'Government Officer',   age:36, quote:'A tomato hardened but never rotted — no fresh item since.',          highlight:'Pattern A · first-experience determinism', color:C.rose },
+  { id:'R4', role:'UX Designer',          age:31, quote:'Most engaged user — churned fresh produce to a competitor.',          highlight:'Warning signal · category churn',  color:C.rose },
   { id:'R5', role:'PhD Researcher',       age:25, quote:'3 faulty electronics → will never buy electronics on Blinkit again.',  highlight:'Pattern A · terminal failure',     color:C.rose },
-  { id:'R6', role:'Writer & Professor',   age:33, quote:'Blinkit is trapped in a stereotype — not trustworthy outside groceries.', highlight:'Pattern D · specialist mental model', color:C.purple },
-  { id:'R7', role:'Housewife',            age:42, quote:'Tried period panties once, loved it — now reorders regularly.',        highlight:'Positive gateway · proves the mechanism', color:C.emerald }
+  { id:'R6', role:'Journalist & Writer',  age:33, quote:'Blinkit is trapped in a stereotype — not trustworthy outside groceries.', highlight:'Pattern D · specialist mental model', color:C.purple },
+  { id:'R7', role:'Finance Manager',      age:42, quote:'Tried period panties once, loved it — now reorders regularly.',        highlight:'Positive gateway · proves the mechanism', color:C.emerald }
 ];
 
 // 5 patterns
