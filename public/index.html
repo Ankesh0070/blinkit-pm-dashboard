@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blinkit — PM Analytics Control Center</title>
+<title>Blinkit — Cross-Category Discovery · PM Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
@@ -15,85 +15,194 @@
     --rose:#F43F5E; --rose-dim:rgba(244,63,94,0.14);
     --amber:#F59E0B; --amber-dim:rgba(245,158,11,0.15);
     --blue:#3B82F6; --blue-dim:rgba(59,130,246,0.14);
+    --purple:#A78BFA; --purple-dim:rgba(167,139,250,0.14);
   }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text);
-    font-family:system-ui,-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased; }
   a { color:inherit; text-decoration:none; }
   button { font-family:inherit; cursor:pointer; }
   ::-webkit-scrollbar { width:9px; height:9px; }
   ::-webkit-scrollbar-thumb { background:#334155; border-radius:5px; }
   ::-webkit-scrollbar-track { background:transparent; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; }
-  .sec-label { font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:2px 0 11px; display:flex; align-items:center; gap:8px; }
+  .card-raise { background:var(--raise); border:1px solid var(--border); border-radius:14px; }
+  .sec-label { font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  .part-badge { display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#0F172A; background:var(--accent); padding:4px 10px; border-radius:999px; }
   .grid { display:grid; gap:14px; }
   .chip { border:1px solid var(--border-2); background:var(--surface2); color:var(--text-2); border-radius:999px; padding:9px 15px; font-size:12.5px; font-weight:600; transition:all .15s ease; text-align:left; }
   .chip:hover { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
-  .navlink:hover { background:var(--surface2); }
+  .navlink { display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted); }
+  .navlink:hover { background:var(--surface2); color:var(--text); }
+  .navlink.active { color:var(--text); background:var(--accent-dim); font-weight:700; }
+  .section { margin-bottom:28px; scroll-margin-top:12px; }
+  .section-title { font-size:22px; font-weight:800; margin:0 0 4px; letter-spacing:-.01em; }
+  .section-sub { font-size:12.5px; color:var(--muted); margin:0 0 14px; }
+  .chart-holder { position:relative; height:220px; }
+  .chart-tall { position:relative; height:280px; }
+  .kpi-value { font-size:28px; font-weight:800; letter-spacing:-.01em; line-height:1.05; }
+  .kpi-label { font-size:12.5px; font-weight:700; color:var(--text-2); margin-top:6px; }
+  .kpi-sub { font-size:10.5px; color:var(--muted); margin-top:2px; }
+  .table-clean th { text-align:left; background:var(--raise); padding:8px 12px; font-size:10.5px; letter-spacing:.03em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+  .table-clean td { padding:9px 12px; border-bottom:1px solid var(--border); font-size:12.5px; }
   .modal-overlay { position:fixed; inset:0; background:rgba(2,6,23,0.7); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:200; padding:24px; }
   .modal-overlay.open { display:flex; }
-  @media (max-width:1080px){ .sidebar{display:none!important} .g4{grid-template-columns:1fr 1fr!important} .g2{grid-template-columns:1fr!important} .flow{flex-direction:column!important} .flow .arrow{transform:rotate(90deg)} }
+  @media (max-width:1080px){ .sidebar{display:none!important} .g4{grid-template-columns:1fr 1fr!important} .g3{grid-template-columns:1fr!important} .g2{grid-template-columns:1fr!important} }
   @keyframes shimmer{0%{opacity:.4}50%{opacity:1}100%{opacity:.4}}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-  .code-key{color:#F2C94C}.code-str{color:#6EE7B7}.code-num{color:#93C5FD}
+  .tag-chip { font-size:9.5px; font-weight:800; text-transform:uppercase; padding:2px 8px; border-radius:999px; color:#0F172A; white-space:nowrap; }
 </style>
 </head>
 <body>
 <div style="display:flex; min-height:100vh;">
-  <!-- Sidebar -->
-  <aside class="sidebar" style="width:236px; flex-shrink:0; background:var(--raise); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:18px 14px;">
-    <div style="display:flex; flex-direction:column; align-items:flex-start; margin-bottom:22px; padding:0 4px;">
-      <img src="blinkit-logo.svg" alt="blinkit" style="width:100px; height:100px; border-radius:20px;">
-      <div style="font-size:11px; font-weight:700; color:var(--text-2); margin-top:9px;">PM Analytics Control Center</div>
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" style="width:238px; flex-shrink:0; background:var(--raise); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:16px 12px; position:sticky; top:0; height:100vh; overflow-y:auto;">
+    <div style="display:flex; flex-direction:column; align-items:flex-start; margin-bottom:20px; padding:0 4px;">
+      <img src="blinkit-logo.svg" alt="blinkit" style="width:74px; height:74px; border-radius:16px;">
+      <div style="font-size:15px; font-weight:800; margin-top:10px; letter-spacing:-.01em;">Cross-Category Discovery</div>
+      <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">PM Analytics Control Center</div>
     </div>
-    <nav style="display:flex; flex-direction:column; gap:2px; font-size:13.5px;">
-      <a href="#kpis" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--text); background:var(--accent-dim); font-weight:700;"><span id="nv1"></span> Executive KPIs</a>
-      <a href="#trusted" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nvT"></span> Blinkit Trusted Program</a>
-      <a href="#workflow" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv2"></span> Review Workflow</a>
-      <a href="#questions" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nvQ"></span> 8 Discovery Q&amp;A</a>
-      <a href="#clusters" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv3"></span> Friction Heatmap</a>
-      <a href="#validation" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nvV"></span> Insight Validation</a>
-      <a href="#bridge" class="navlink" style="display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:8px; color:var(--muted);"><span id="nv4"></span> MVP Bridge</a>
+    <nav style="display:flex; flex-direction:column; gap:2px; font-size:13px;">
+      <a href="#snapshot" class="navlink active">📊 Executive Snapshot</a>
+      <div style="font-size:9.5px; font-weight:800; color:var(--faint); letter-spacing:.08em; padding:10px 11px 4px;">PART 1 · DISCOVERY</div>
+      <a href="#discovery" class="navlink">🧠 AI Review Engine</a>
+      <a href="#insights" class="navlink">🔍 Insights & Themes</a>
+      <a href="#workflow" class="navlink">⚡ Live Workflow</a>
+      <div style="font-size:9.5px; font-weight:800; color:var(--faint); letter-spacing:.08em; padding:10px 11px 4px;">PART 2 · RESEARCH</div>
+      <a href="#research" class="navlink">👥 User Interviews</a>
+      <a href="#validation" class="navlink">✓ Hypothesis Scorecard</a>
+      <div style="font-size:9.5px; font-weight:800; color:var(--faint); letter-spacing:.08em; padding:10px 11px 4px;">PART 3 · PROBLEM</div>
+      <a href="#problem" class="navlink">🎯 Problem Framing</a>
+      <div style="font-size:9.5px; font-weight:800; color:var(--faint); letter-spacing:.08em; padding:10px 11px 4px;">PART 4 · MVP</div>
+      <a href="#mvp" class="navlink">🚀 Live Prototype</a>
+      <a href="#trusted" class="navlink">🛡️ Blinkit Trusted</a>
+      <div style="font-size:9.5px; font-weight:800; color:var(--faint); letter-spacing:.08em; padding:10px 11px 4px;">EXPLORE</div>
+      <a href="#questions" class="navlink">💡 The 8 Discovery Q&amp;A</a>
     </nav>
-    <button onclick="openArchModal()" style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--surface2); color:var(--text); border:1px solid var(--border-2); border-radius:10px; padding:11px; font-size:12.5px; font-weight:700;">
-      <span id="nvPipe"></span> View AI Pipeline
-    </button>
-    <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--border);">
-      <span id="connBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--muted);">● Connecting…</span>
+    <div style="margin-top:auto; padding-top:16px;">
+      <div id="connBadge" style="font-size:10.5px; color:var(--muted); padding:8px 11px;">● Connecting…</div>
+      <div style="font-size:9.5px; color:var(--faint); padding:0 11px 8px;">v3.0 · full-catalog data-driven</div>
     </div>
   </aside>
 
-  <main style="flex:1; min-width:0; overflow-x:hidden; padding:22px 26px; max-width:1420px;">
-    <header style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-      <div style="display:flex; align-items:center; gap:13px;">
-        <img src="blinkit-logo.svg" alt="blinkit" style="width:44px; height:44px; border-radius:11px;">
-        <div>
-          <h1 style="font-size:21px; font-weight:800; margin:0;">PM Insights &amp; Discovery Engine</h1>
-          <p style="font-size:12.5px; color:var(--muted); margin:3px 0 0;">Play Store Reviews → LLM Clustering → PM Insight → Trial &amp; Confidence Layer</p>
+  <!-- ============ MAIN ============ -->
+  <main style="flex:1; padding:22px 28px; max-width:1400px;">
+    <!-- Header -->
+    <header style="display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <h1 style="margin:0; font-size:24px; font-weight:800; letter-spacing:-.02em;">
+          Discovery Engine · Cross-Category Adoption at Blinkit
+        </h1>
+        <div style="font-size:12px; color:var(--muted); margin-top:3px;">
+          Growth PM graduation project · 4-part evaluation dashboard · <span id="dataGen">generated live</span>
         </div>
       </div>
-      <button onclick="openArchModal()" style="display:flex; align-items:center; gap:8px; background:var(--accent); color:#0F172A; border:none; border-radius:10px; padding:10px 15px; font-size:12.5px; font-weight:800;">
-        <span id="hdrPipe"></span> View AI Pipeline Architecture
-      </button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="https://blinkit-trial-confidence-layer.vercel.app/prototype/index.html" target="_blank" rel="noopener"
+           style="background:var(--accent); color:#0F172A; padding:9px 15px; border-radius:10px; font-size:12px; font-weight:800; display:flex; align-items:center; gap:6px;">
+          🚀 Launch Live Prototype
+        </a>
+        <button onclick="openArchModal()"
+          style="background:var(--surface2); color:var(--text); border:1px solid var(--border-2); padding:9px 15px; border-radius:10px; font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px;">
+          🏗 System Architecture
+        </button>
+      </div>
     </header>
 
-    <!-- 1. Executive KPIs -->
-    <section id="kpis">
-      <div class="sec-label"><span id="lb1"></span> Executive Metrics — case-study snapshot</div>
-      <div class="grid g4" style="grid-template-columns:repeat(4,1fr); margin-bottom:22px;" id="kpiRow"></div>
+    <!-- ============ 1. EXECUTIVE SNAPSHOT ============ -->
+    <section id="snapshot" class="section">
+      <div class="sec-label">📊 Executive Snapshot</div>
+      <h2 class="section-title">Cross-Category Adoption is stuck at 1.8% CCAR — this dashboard shows why and what to ship</h2>
+      <p class="section-sub">
+        Habituated grocery regulars reorder the same 15 items every week and never once try Personal Care, Electronics or Baby — not from lack of awareness, but because trying feels risky on a 10-minute app. This dashboard walks through the 4-part case study.
+      </p>
+      <div class="grid" style="grid-template-columns:repeat(4,1fr);" id="snapshotKpis"></div>
+
+      <div class="grid" style="grid-template-columns:2fr 1fr; margin-top:14px;" class="g2">
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">CCAR trajectory — last 12 months (simulated + Q1'26 baseline)</div>
+          <div class="chart-tall"><canvas id="ccarLineChart"></canvas></div>
+        </div>
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Category share of corpus mentions (32,999 items)</div>
+          <div class="chart-tall"><canvas id="categoryShareDonut"></canvas></div>
+        </div>
+      </div>
     </section>
 
-    <!-- 1b. Blinkit Trusted Program — curated picks, Amazon's-Choice analog -->
-    <section id="trusted" style="margin-bottom:24px;">
-      <div id="trustedSection"></div>
+    <!-- ============ 2. PART 1 — AI DISCOVERY ENGINE ============ -->
+    <section id="discovery" class="section">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:4px;">
+        <span class="part-badge">Part 1</span>
+        <div class="sec-label" style="margin:0;">AI-Powered Review Analysis Engine</div>
+      </div>
+      <h2 class="section-title">One AI engine turns 32,999 raw items into 8 ranked discovery signals</h2>
+      <p class="section-sub">
+        Multi-source ingestion → discovery-relevance filter → LLM cluster + sentiment → synthesize themes + PM insights → present live in this dashboard.
+      </p>
+
+      <!-- 5-step pipeline -->
+      <div class="card" style="padding:16px 18px; margin-bottom:14px;">
+        <div class="sec-label">The 5-step pipeline</div>
+        <div id="pipelineFlow" style="display:flex; align-items:stretch; gap:8px; flex-wrap:wrap;"></div>
+      </div>
+
+      <!-- Charts row: sources + coverage + sentiment -->
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr;" class="g3">
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Data sources — 32,999 raw items ingested</div>
+          <div class="chart-holder"><canvas id="sourcesBarChart"></canvas></div>
+        </div>
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Category coverage — % of corpus that carries a category signal</div>
+          <div class="chart-holder"><canvas id="categoryCoverageChart"></canvas></div>
+        </div>
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Complaint typology (7,925 forum complaints)</div>
+          <div class="chart-holder"><canvas id="complaintTypologyChart"></canvas></div>
+        </div>
+      </div>
     </section>
 
-    <!-- 2. LIVE Review-Analysis Workflow (the runnable Part-1 pipeline) -->
-    <section id="workflow" style="margin-bottom:22px;">
-      <div class="sec-label"><span id="lbWf"></span> Live Review-Analysis Workflow — paste or upload real reviews &amp; run the AI pipeline</div>
+    <!-- ============ 3. INSIGHTS & FRICTION HEATMAP ============ -->
+    <section id="insights" class="section">
+      <div class="sec-label">🔍 Insights & friction clustering</div>
+      <h2 class="section-title">Three friction clusters explain why 8 in 10 shoppers never leave grocery</h2>
+
+      <div class="grid" style="grid-template-columns:1fr 1fr;" class="g2">
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Friction clusters · share of negative reviews</div>
+          <div id="clusterBars"></div>
+          <div class="chart-holder" style="margin-top:12px;"><canvas id="clusterDonutChart"></canvas></div>
+        </div>
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Sentiment distribution (5,420 discovery-relevant reviews)</div>
+          <div class="chart-holder"><canvas id="sentimentDonut"></canvas></div>
+          <div style="margin-top:14px;">
+            <div style="font-size:12.5px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:.04em;">Master synthesis</div>
+            <div style="font-size:13px; margin-top:4px; line-height:1.5;">
+              <b>"Trial is an all-or-nothing bet, not a low-risk sample."</b> Three symptoms — size hesitation (42%), sticker shock (31%), no safety net (18%) — one broken decision. Fixing the decision, not each symptom, is the highest-leverage move.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category density heatmap -->
+      <div class="card" style="padding:16px 18px; margin-top:14px;">
+        <div class="sec-label">Category density × phase (from category_density_flags.json)</div>
+        <div id="densityHeatmap"></div>
+      </div>
+    </section>
+
+    <!-- ============ 4. LIVE WORKFLOW ============ -->
+    <section id="workflow" class="section">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:4px;">
+        <span class="part-badge">Part 1 · Live</span>
+        <div class="sec-label" style="margin:0;">Runnable Review-Analysis Workflow</div>
+      </div>
+      <h2 class="section-title">Paste reviews, hit Run — real Gemini + Groq analysis, live in this dashboard</h2>
       <div class="card" style="padding:18px 20px;">
         <div style="display:flex; align-items:center; gap:9px; margin-bottom:12px; flex-wrap:wrap;">
-          <span id="wfIcon" style="color:var(--accent);"></span>
+          <span style="color:var(--accent);">🗂</span>
           <span style="font-size:14px; font-weight:800;">Input: raw user reviews</span>
           <span style="font-size:11px; color:var(--muted);">Play Store · App Store · Reddit · forums — one per line</span>
           <span style="margin-left:auto; font-size:10.5px; font-weight:700; color:#0F172A; background:var(--accent); padding:2px 9px; border-radius:999px;">LIVE LLM</span>
@@ -103,7 +212,7 @@
         <div style="display:flex; gap:9px; flex-wrap:wrap; margin-top:11px; align-items:center;">
           <button onclick="runWorkflow()" id="runBtn"
             style="background:var(--accent); color:#0F172A; border:none; border-radius:11px; padding:11px 20px; font-size:13px; font-weight:800; display:flex; align-items:center; gap:7px;">
-            <span id="wfBolt"></span> Run AI Analysis
+            ⚡ Run AI Analysis
           </button>
           <button onclick="loadSampleReviews()"
             style="background:var(--surface2); color:var(--text-2); border:1px solid var(--border-2); border-radius:11px; padding:11px 16px; font-size:12.5px; font-weight:700;">Load sample reviews</button>
@@ -116,67 +225,155 @@
       <div id="workflowOutput" style="margin-top:14px;"></div>
     </section>
 
-    <!-- 2b. Consolidated answers to the 8 discovery questions -->
-    <section id="questions" style="margin-bottom:22px;">
-      <div class="sec-label"><span id="lbQ"></span> The 8 Discovery Questions — consolidated answers (corpus + 7 interviews)</div>
-      <div class="grid g4" id="questionGrid" style="grid-template-columns:repeat(2,1fr);"></div>
-    </section>
-
-    <!-- 3. Friction Heatmap -->
-    <section id="clusters" style="margin-bottom:22px;">
-      <div class="sec-label"><span id="lb3"></span> Review Clustering &amp; Friction Heatmap — negative-sentiment breakdown</div>
-      <div class="grid g2" style="grid-template-columns:1.35fr 1fr;">
-        <div class="card" style="padding:18px 20px;" id="clusterCard"></div>
-        <div class="card" style="padding:18px 20px; display:flex; flex-direction:column;">
-          <div style="font-size:12.5px; font-weight:700; color:var(--text-2); margin-bottom:12px;">Cluster share of negative reviews</div>
-          <div style="flex:1; min-height:200px; position:relative;"><canvas id="clusterChart"></canvas></div>
-        </div>
+    <!-- ============ 5. PART 2 — RESEARCH ============ -->
+    <section id="research" class="section">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:4px;">
+        <span class="part-badge">Part 2</span>
+        <div class="sec-label" style="margin:0;">Primary Research · 7 in-depth interviews</div>
       </div>
-      <div id="pmStrategy" style="margin-top:14px;"></div>
+      <h2 class="section-title">7 interviews validated 5 patterns — refined "novelty gap" into "steering gap"</h2>
+      <div id="interviewGrid" class="grid" style="grid-template-columns:repeat(4,1fr);" class="g4"></div>
+
+      <div class="card" style="padding:16px 18px; margin-top:14px;">
+        <div class="sec-label">The 5 patterns that emerged</div>
+        <div id="patternCards" class="grid" style="grid-template-columns:repeat(5,1fr);"></div>
+      </div>
     </section>
 
-    <!-- 3b. Insight Validation -->
-    <section id="validation" style="margin-bottom:22px;">
-      <div class="sec-label"><span id="lbV"></span> How the insights were validated — quality control</div>
-      <div class="grid g2" style="grid-template-columns:0.9fr 1.2fr;">
-        <div class="card" style="padding:18px 20px;" id="methodCard"></div>
-        <div class="card" style="padding:0; overflow:hidden;">
-          <div style="padding:15px 18px 6px;">
-            <div style="font-size:12.5px; font-weight:700; color:var(--text-2);">AI hypothesis → primary-research outcome</div>
-            <div style="font-size:11px; color:var(--muted); margin-top:2px;">corpus-derived hypotheses tested against the 7 interviews</div>
-          </div>
-          <div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:12.5px;" id="validationTable"></table></div>
+    <!-- ============ 6. HYPOTHESIS SCORECARD ============ -->
+    <section id="validation" class="section">
+      <div class="sec-label">✓ Hypothesis validation (corpus → interviews)</div>
+      <h2 class="section-title">Which insights held up under primary research</h2>
+      <div class="grid" style="grid-template-columns:1fr 1fr;" class="g2">
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">4-step QA methodology</div>
+          <div id="methodCard"></div>
+        </div>
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Hypothesis scorecard</div>
+          <div id="hypothesisScorecard"></div>
         </div>
       </div>
     </section>
 
-    <!-- 4. MVP Bridge -->
-    <section id="bridge" style="margin-bottom:20px;"></section>
+    <!-- ============ 7. PART 3 — PROBLEM FRAMING ============ -->
+    <section id="problem" class="section">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:4px;">
+        <span class="part-badge">Part 3</span>
+        <div class="sec-label" style="margin:0;">Problem framing canvas</div>
+      </div>
+      <h2 class="section-title">Trial is an all-or-nothing bet — not a low-risk sample</h2>
+      <div id="problemCanvas" class="grid" style="grid-template-columns:1fr 1fr 1fr;" class="g3"></div>
 
-    <footer style="font-size:11px; color:var(--faint); padding-top:14px; border-top:1px solid var(--border);">
-      PM Analytics Control Center · insights grounded in the project's research corpus (5,000+ public reviews + 7 interviews). Bridges directly to the live Trial &amp; Confidence MVP.
-    </footer>
+      <div class="grid" style="grid-template-columns:1.4fr 1fr; margin-top:14px;" class="g2">
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Root cause — The Familiarity Loop ∞</div>
+          <div id="rootCauseLoop"></div>
+        </div>
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Impact sizing — per 1M Monthly Active Customers</div>
+          <table id="impactSizingTable" style="width:100%; border-collapse:collapse;"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 8. PART 4 — MVP ============ -->
+    <section id="mvp" class="section">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:4px;">
+        <span class="part-badge">Part 4</span>
+        <div class="sec-label" style="margin:0;">AI-native MVP · shipped in production</div>
+      </div>
+      <h2 class="section-title">The Trial &amp; Confidence Engine — micro-trials + AI social proof</h2>
+
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr;" class="g3">
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Stage 1 · AI Nudge</div>
+          <div style="font-size:13px; line-height:1.5;">Read the cart live → contextual social-proof banner ("82% of similar shoppers added this Personal Care micro-trial"). Match confidence 94%.</div>
+        </div>
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Stage 2 · Transparent AI</div>
+          <div style="font-size:13px; line-height:1.5;">Inspectable JSON trace — every recommendation ships with propensity score, rule matched, trial vs full-size economics, freeloader-protection gate.</div>
+        </div>
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Stage 3 · Checkout + reset</div>
+          <div style="font-size:13px; line-height:1.5;">One-tap add → trust badges (instant refund + one-tap return) → checkout → cart resets to grocery baseline. Grocery flow untouched at 98.6% completion.</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:22px 26px; margin-top:14px; background:linear-gradient(120deg, rgba(242,201,76,0.18), rgba(16,185,129,0.10)); border:1px solid rgba(242,201,76,0.35); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+        <div>
+          <div style="font-size:10.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--accent);">From Insight to Execution</div>
+          <div style="font-size:16px; font-weight:800; margin-top:3px;">Test the live AI-Powered Trial Engine · with 3 personas</div>
+          <div style="font-size:12.5px; color:var(--text-2); margin-top:3px;">Rohan (SDE, Bengaluru) · Priya (PM, Gurugram) · Ankit (Consultant, Mumbai)</div>
+        </div>
+        <a href="https://blinkit-trial-confidence-layer.vercel.app/prototype/trial-engine.html" target="_blank" rel="noopener"
+           style="background:var(--accent); color:#0F172A; font-size:13px; font-weight:800; padding:12px 22px; border-radius:12px; display:flex; align-items:center; gap:8px; white-space:nowrap;">
+          Launch Live MVP →
+        </a>
+      </div>
+    </section>
+
+    <!-- ============ 9. BLINKIT TRUSTED ============ -->
+    <section id="trusted" class="section">
+      <div class="sec-label">🛡️ Blinkit Trusted Program — Amazon's Choice / Flipkart Assured analog</div>
+      <h2 class="section-title">96 of 1,150 SKUs (8.3%) earn a rule-based trust badge — every category covered</h2>
+
+      <div class="grid" style="grid-template-columns:repeat(4,1fr); margin-bottom:14px;" class="g4">
+        <div class="card" style="padding:14px 16px;">
+          <div style="font-size:26px; font-weight:800; color:var(--accent);">96</div>
+          <div class="kpi-label">Trusted picks (of 1,150)</div>
+          <div class="kpi-sub">8.3% of catalog · rule-based</div>
+        </div>
+        <div class="card" style="padding:14px 16px;">
+          <div style="font-size:26px; font-weight:800;">88</div>
+          <div class="kpi-label">Cleared the strict rule</div>
+          <div class="kpi-sub">rating≥4.3 · ratings≥500 · repeat≥55%</div>
+        </div>
+        <div class="card" style="padding:14px 16px;">
+          <div style="font-size:26px; font-weight:800;">8</div>
+          <div class="kpi-label">Top-up (category floor)</div>
+          <div class="kpi-sub">composite-score top-3 per category</div>
+        </div>
+        <div class="card" style="padding:14px 16px;">
+          <div style="font-size:26px; font-weight:800; color:var(--emerald);">23/23</div>
+          <div class="kpi-label">Categories covered</div>
+          <div class="kpi-sub">no empty category</div>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns:1.4fr 1fr;" class="g2">
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Per-category coverage</div>
+          <div class="chart-tall"><canvas id="trustedByCategoryChart"></canvas></div>
+        </div>
+        <div class="card" style="padding:16px 18px;">
+          <div class="sec-label">Category leaders (top 5)</div>
+          <div id="trustedLeadersList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. THE 8 DISCOVERY QUESTIONS ============ -->
+    <section id="questions" class="section">
+      <div class="sec-label">💡 The 8 discovery questions · consolidated answers</div>
+      <h2 class="section-title">Every answer is data-linked to a dashboard section</h2>
+      <div id="questionGrid" class="grid" style="grid-template-columns:1fr 1fr;" class="g2"></div>
+    </section>
+
   </main>
 </div>
 
-<!-- AI Pipeline modal -->
-<div class="modal-overlay" id="archModal" onclick="if(event.target===this)closeArchModal()">
-  <div class="card" style="max-width:1060px; width:100%; max-height:90vh; overflow-y:auto;">
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border);">
-      <div style="display:flex; align-items:center; gap:11px;">
-        <span id="mIcon" style="color:var(--accent);"></span>
-        <div><div style="font-size:16px; font-weight:800;">End-to-End AI Discovery Pipeline</div>
-        <div style="font-size:11.5px; color:var(--muted);">Raw reviews → clustered insight → executable MVP</div></div>
+<!-- Architecture modal -->
+<div class="modal-overlay" id="archModal">
+  <div class="card" style="max-width:900px; width:100%; padding:22px 26px; max-height:82vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <div>
+        <div style="font-size:19px; font-weight:800;">🏗 System Architecture — end-to-end</div>
+        <div style="font-size:12px; color:var(--muted); margin-top:2px;">From raw corpus to live MVP · one AI-native pipeline</div>
       </div>
-      <button onclick="closeArchModal()" style="background:var(--surface2); border:1px solid var(--border-2); border-radius:999px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; color:var(--text-2);"><span id="mClose"></span></button>
+      <button onclick="closeArchModal()" style="background:var(--surface2); border:1px solid var(--border-2); color:var(--text); padding:6px 11px; border-radius:8px; font-size:13px; font-weight:700;">Close</button>
     </div>
-    <div style="padding:26px 24px;">
-      <div class="flow" style="display:flex; align-items:stretch; gap:0;" id="pipelineFlow"></div>
-      <div style="margin-top:22px; display:flex; align-items:center; gap:10px; background:var(--emerald-dim); border:1px solid rgba(16,185,129,0.3); border-radius:12px; padding:14px 16px;">
-        <span id="mVerify" style="color:var(--emerald);"></span>
-        <div style="font-size:13px; color:var(--text-2);"><b style="color:var(--text);">Validated on 5,420 public reviews</b> across Blinkit, Instamart &amp; Zepto — clustered, QA-sampled, and mapped to the shipped Trial &amp; Confidence MVP.</div>
-      </div>
-    </div>
+    <div id="pipelineArchDetail"></div>
   </div>
 </div>
 

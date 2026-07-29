@@ -1,163 +1,260 @@
 // ============================================================================
-// Blinkit PM Analytics Control Center — dark console
-// KPIs · LIVE review-analysis workflow · 8 discovery Q&A · friction heatmap ·
-// insight validation · MVP bridge · pipeline modal
+// Blinkit PM Analytics Control Center — v3.0
+// Fully data-driven, 4-part-assignment aligned.
+// Uses Chart.js for real charts. Everything else is DOM-composed.
 // ============================================================================
+
 const C = {
-  accent:'#F2C94C', text:'#F1F5F9', text2:'#CBD5E1', muted:'#94A3B8', faint:'#64748B',
-  emerald:'#10B981', rose:'#F43F5E', amber:'#F59E0B', blue:'#3B82F6',
-  surface:'#1E293B', border:'rgba(148,163,184,0.18)'
+  text:'#F1F5F9', text2:'#CBD5E1', muted:'#94A3B8', faint:'#64748B',
+  accent:'#F2C94C', emerald:'#10B981', rose:'#F43F5E', amber:'#F59E0B',
+  blue:'#3B82F6', purple:'#A78BFA', teal:'#14B8A6',
+  border:'rgba(148,163,184,0.14)', surface:'#1E293B', raise:'#0B1120',
 };
+
 const PROTO = 'https://blinkit-trial-confidence-layer.vercel.app';
 
-// ---------- Lucide icons ----------
-const IP = {
-  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
-  sparkles:'<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/>',
-  bolt:'<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
-  msg:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>',
-  alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4M12 17h.01"/>',
-  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
-  trend:'<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>',
-  layers:'<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/>',
-  rocket:'<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
-  cpu:'<rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/>',
-  chev:'<path d="m6 9 6 6 6-6"/>', close:'<path d="M18 6 6 18M6 6l12 12"/>',
-  quote:'<path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h3a2 2 0 0 1-2 2 1 1 0 0 0 0 2 4 4 0 0 0 4-4V5a2 2 0 0 0-2-2z"/><path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h3a2 2 0 0 1-2 2 1 1 0 0 0 0 2 4 4 0 0 0 4-4V5a2 2 0 0 0-2-2z"/>',
-  check:'<path d="M20 6 9 17l-5-5"/>', arrow:'<path d="M5 12h14M12 5l7 7-7 7"/>',
-  bulb:'<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/>',
-  db:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
-  brain:'<path d="M12 5a3 3 0 1 0-5.997.142 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.142 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>',
-  branch:'<line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
-  verify:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/>',
-  help:'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
-  grid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>'
-};
-function icon(n, s = 18, w = 2) { return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IP[n]}</svg>`; }
+// Colorblind-safe categorical palette (Okabe-Ito based, tweaked for dark bg)
+const PALETTE = ['#F2C94C','#3B82F6','#10B981','#F43F5E','#A78BFA','#F59E0B','#14B8A6','#F97316','#EC4899','#84CC16'];
 
 // ============================================================================
-// DATA
+// DATA — sourced from ProblemStatement.md + Architecture.md + shipped catalog
 // ============================================================================
-const KPIS = [
-  { icon:'msg',   label:'Product Reviews (in-app)', value:'195K', sub:'across 1,150 SKUs · 50-300 per product', color:C.blue,    bar:null },
-  { icon:'verify',label:'Blinkit Trusted Picks', value:'96', sub:'8.3% of catalog · rule-based, not paid', color:C.emerald, bar:8, barMax:100 },
-  { icon:'alert', label:'Cross-Category Friction Score', value:'74%', sub:'High hesitation · Personal Care', color:C.rose, bar:74 },
-  { icon:'trend', label:'Predicted Trial Conversion Lift', value:'+28%', sub:'with Micro-Trial &lt; ₹30 pod', color:C.amber, bar:28, barMax:50 }
+
+// Executive KPIs (top of dashboard)
+const SNAPSHOT_KPIS = [
+  { value:'1.8%', label:'Cross-Category Activation Rate', sub:'North Star · % of MAC buying ≥1 new L2 category', color:C.accent, trend:'+22.1% MoM' },
+  { value:'204K', label:'In-App Product Reviews', sub:'across 1,150 SKUs · working-professional voice', color:C.blue, trend:'50-300/product' },
+  { value:'96', label:'Blinkit Trusted Picks', sub:'8.3% of catalog · rule-based, not paid', color:C.emerald, trend:'23/23 categories' },
+  { value:'+28%', label:'Predicted Trial-Conversion Lift', sub:'with <₹30 micro-trial pod', color:C.amber, trend:'Modelled from research' }
 ];
 
-// Blinkit Trusted — per-category breakdown from mark_trusted_picks.py output.
-const TRUSTED_PICKS = [
-  { cat:'jewellery',            n:8, top:'GIVA earrings — 4.6★ · 82% reorder' },
-  { cat:'books',                n:7, top:'Fingerprint — Train to Pakistan · 4.6★' },
-  { cat:'spiritual',            n:7, top:'Cycle Pure Agarbatti · 4.6★' },
-  { cat:'stationery_games',     n:7, top:'Parker Trimax Pen · 4.8★' },
-  { cat:'sports_outdoor',       n:6, top:'SS Tennis Bat Full Size · 4.5★' },
-  { cat:'pet',                  n:5, top:'Pedigree Adult 1.2kg · 4.4★' },
-  { cat:'electronics',          n:4, top:'JBL Bassheads Pro · 4.8★' },
-  { cat:'home_cleaning',        n:4, top:'Ariel Matic Quick Wash 1L · 4.5★' },
-  { cat:'cold_drinks_juices',   n:4, top:'Mountain Dew Diet 1.25L · 4.8★' },
-  { cat:'instant_frozen',       n:4, top:'Yippee Masala Noodles · 4.5★' },
-  { cat:'supplements',          n:4, top:'GNC Biozyme Whey 1kg · 4.9★' },
-  { cat:'atta_rice_dal',        n:3, top:'Fortune Multigrain Atta · 4.4★' },
-  { cat:'baby',                 n:3, top:'Himalaya Diaper Pants · 4.5★' },
-  { cat:'biscuits_bakery',      n:3, top:'Britannia Good Day · 4.5★' },
-  { cat:'dairy_bread_eggs',     n:3, top:'Amul Milk Gold 500ml · 4.7★' },
-  { cat:'intimate_personal',    n:3, top:'Durex Extra Time Pack of 20 · 4.4★' },
-  { cat:'masala_oil',           n:3, top:'Fortune Kachi Ghani 5L · 4.4★' },
-  { cat:'munchies',             n:3, top:'Bingo Magic Masala · 4.4★' },
-  { cat:'personal_care_beauty', n:3, top:'Mamaearth Niacinamide Serum · 4.7★' },
-  { cat:'pharmacy_health',      n:3, top:'Dr. Ortho Pain Relief · 4.3★' },
-  { cat:'sweet_tooth',          n:3, top:'Cadbury Dark 150g · 4.6★' },
-  { cat:'tea_coffee',           n:3, top:'Taj Mahal Green Tea · 4.5★' },
-  { cat:'vegetables_fruits',    n:3, top:'Farm Fresh Royal Gala Apple · 4.3★' }
-];
-
-const CATEGORY_DISPLAY = {
-  jewellery:'Jewellery', books:'Books', spiritual:'Spiritual', stationery_games:'Stationery & Games',
-  sports_outdoor:'Sports & Outdoor', pet:'Pet Care', electronics:'Electronics', home_cleaning:'Home Cleaning',
-  cold_drinks_juices:'Cold Drinks & Juices', instant_frozen:'Instant & Frozen', supplements:'Supplements',
-  atta_rice_dal:'Atta, Rice & Dal', baby:'Baby Care', biscuits_bakery:'Biscuits & Bakery',
-  dairy_bread_eggs:'Dairy, Bread & Eggs', intimate_personal:'Intimate Care', masala_oil:'Masala & Oil',
-  munchies:'Munchies', personal_care_beauty:'Beauty & Personal Care', pharmacy_health:'Pharmacy & Health',
-  sweet_tooth:'Sweet Tooth', tea_coffee:'Tea & Coffee', vegetables_fruits:'Vegetables & Fruits'
+// CCAR trajectory — 12 months (last 3 are Q1'26 shipped)
+const CCAR_TIMELINE = {
+  labels:['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul'],
+  values:[1.20, 1.22, 1.24, 1.28, 1.35, 1.42, 1.47, 1.50, 1.55, 1.62, 1.72, 1.80],
+  target:2.50
 };
 
+// Corpus data (from ProblemStatement.md § 3.1)
+const DATA_SOURCES = [
+  { source:'YouTube', count:18941, color:C.rose },
+  { source:'PissedConsumer', count:7925, color:C.amber },
+  { source:'Reddit (comments)', count:2761, color:C.blue },
+  { source:'Play Store', count:2367, color:C.emerald },
+  { source:'Reddit (posts)', count:507, color:C.purple },
+  { source:'HackerNews', count:323, color:C.teal },
+  { source:'App Store', count:175, color:'#94A3B8' }
+];
+
+// Category coverage in corpus (mentions + % of corpus)
+const CATEGORY_COVERAGE = [
+  { name:'General (no signal)', mentions:30355, pct:92.0, phase:'—',       color:C.faint },
+  { name:'Groceries (fresh)',   mentions:1114,  pct:3.4,  phase:'Core',    color:C.emerald },
+  { name:'Snacks & Beverages',  mentions:659,   pct:2.0,  phase:'Core',    color:C.blue },
+  { name:'Electronics',         mentions:509,   pct:1.5,  phase:'Phase 1', color:C.accent },
+  { name:'Personal Care',       mentions:233,   pct:0.7,  phase:'Phase 2', color:C.rose },
+  { name:'Pharmacy',            mentions:152,   pct:0.5,  phase:'Phase 2', color:C.amber },
+  { name:'Baby',                mentions:41,    pct:0.1,  phase:'Phase 4', color:C.purple },
+  { name:'Home Cleaning',       mentions:32,    pct:0.1,  phase:'Phase 5', color:C.teal },
+  { name:'Pet',                 mentions:23,    pct:0.1,  phase:'Phase 5', color:C.rose },
+  { name:'Intimate',            mentions:21,    pct:0.1,  phase:'Phase 5', color:'#EC4899' }
+];
+
+// Complaint typology (7,925 forum complaints)
+const COMPLAINT_TYPOLOGY = [
+  { type:'Other',                count:3653, color:C.faint },
+  { type:'Refund & Support',     count:3051, color:C.rose },
+  { type:'Product Quality',      count:459,  color:C.amber },
+  { type:'Delivery Issues',      count:314,  color:C.blue },
+  { type:'Wrong / Missing Item', count:248,  color:C.purple },
+  { type:'Non-Grocery Category', count:151,  color:C.emerald },
+  { type:'Pricing & Fees',       count:49,   color:C.teal }
+];
+
+// Friction clusters — the 3-cluster synthesis
 const CLUSTERS = [
-  { name:'Sizing Risk', pct:42, color:C.rose,  quote:"Don't want to buy a 100ml serum without knowing if it suits my skin." },
-  { name:'Price Barrier', pct:31, color:C.amber, quote:"₹500 for a new brand on 10-min delivery is too expensive to gamble." },
-  { name:'Return Fear', pct:18, color:C.blue,  quote:"What if it arrives damaged or expired?" }
+  { name:'Sizing Risk',   pct:42, color:C.rose,   quote:"Don't want to buy a 100ml serum without knowing if it suits my skin." },
+  { name:'Price Barrier', pct:31, color:C.amber,  quote:"₹500 for a new brand on 10-min delivery is too expensive to gamble." },
+  { name:'Return Fear',   pct:18, color:C.blue,   quote:"What if it arrives damaged or expired?" },
+  { name:'Other',         pct:9,  color:C.faint,  quote:'' }
 ];
 
+// Sentiment distribution
+const SENTIMENT = { negative:64, neutral:22, positive:14 };
+
+// Category density × phase heatmap (which categories launch in which phase)
+const DENSITY_PHASES = [
+  { cat:'Electronics',          mentions:509, density:'dense',  phase:'Phase 1', badge:'Launch first' },
+  { cat:'Personal Care',        mentions:233, density:'dense',  phase:'Phase 2', badge:'Automate' },
+  { cat:'Pharmacy',             mentions:152, density:'dense',  phase:'Phase 2', badge:'Caveat: medical trust' },
+  { cat:'Baby',                 mentions:41,  density:'sparse', phase:'Phase 4', badge:'Inverted-cause test' },
+  { cat:'Home Cleaning',        mentions:32,  density:'sparse', phase:'Phase 5', badge:'Override sparse' },
+  { cat:'Pet',                  mentions:23,  density:'sparse', phase:'Phase 5', badge:'Override sparse' },
+  { cat:'Intimate',             mentions:21,  density:'sparse', phase:'Phase 5', badge:'Override sparse' },
+  { cat:'Books',                mentions:180, density:'dense',  phase:'Phase 5', badge:'Expansion' },
+  { cat:'Supplements',          mentions:210, density:'dense',  phase:'Phase 5', badge:'Expansion' }
+];
+
+// 7 interviewees (from ProblemStatement.md § 3.2)
+const INTERVIEWEES = [
+  { id:'R1', role:'Housewife',            age:30, quote:'Cost triples for small volume/low price items due to delivery charge.', highlight:'Pattern C · fees on small trials', color:C.amber },
+  { id:'R2', role:'Working Professional', age:24, quote:'Never browses the homescreen; goes straight to search.',              highlight:'Pattern E · discovery bypass',     color:C.blue },
+  { id:'R3', role:'Government Employee',  age:36, quote:'A tomato hardened but never rotted — no fresh item since.',          highlight:'Pattern A · first-experience determinism', color:C.rose },
+  { id:'R4', role:'Housewife',            age:31, quote:'Most engaged user — churned fresh produce to a competitor.',          highlight:'Warning signal · category churn',  color:C.rose },
+  { id:'R5', role:'PhD Researcher',       age:25, quote:'3 faulty electronics → will never buy electronics on Blinkit again.',  highlight:'Pattern A · terminal failure',     color:C.rose },
+  { id:'R6', role:'Writer & Professor',   age:33, quote:'Blinkit is trapped in a stereotype — not trustworthy outside groceries.', highlight:'Pattern D · specialist mental model', color:C.purple },
+  { id:'R7', role:'Housewife',            age:42, quote:'Tried period panties once, loved it — now reorders regularly.',        highlight:'Positive gateway · proves the mechanism', color:C.emerald }
+];
+
+// 5 patterns
+const PATTERNS = [
+  { id:'A', name:'First-Experience Determinism',   desc:'One bad trial permanently closes a category. R5: 3 faulty electronics → never again.', color:C.rose },
+  { id:'B', name:'Social Proof vs Platform Suggestions', desc:'5 of 7 rank reviews/brand above price. Generic algo suggestions rejected.', color:C.blue },
+  { id:'C', name:'Tax on Trials',                  desc:'Fees triple on small cautious first-trial baskets. Fee-to-basket ratio breaks trial.', color:C.amber },
+  { id:'D', name:'Locked-in Specialist Models',    desc:'"Blinkit = grocery, Myntra = clothes, Amazon = electronics." Category-app pairing.', color:C.purple },
+  { id:'E', name:'Structural Bypass of Discovery', desc:'High-intent search-first users — homepage banners literally never noticed.', color:C.teal }
+];
+
+// Method (4-step QA)
+const METHOD = [
+  { n:'1', t:'Gather at scale',          d:'32,999 items — Play Store, App Store, Reddit, YouTube, PissedConsumer, HackerNews' },
+  { n:'2', t:'LLM cluster + sentiment',   d:'Embed & density-cluster into friction themes; score sentiment/confidence per cluster' },
+  { n:'3', t:'Manual QA sample',          d:'200+ random classifications + lowest-confidence 10% bucket re-checked' },
+  { n:'4', t:'Primary-research validation', d:'7 in-depth interviews test each corpus-derived hypothesis' }
+];
+
+// Hypothesis scorecard
+const HYPOTHESES = [
+  { tag:'VALIDATED', color:C.emerald, h:'Non-grocery trials fail disproportionately',            o:'Failures are terminal, not just annoying (R5: 3 faulty electronics → never again).' },
+  { tag:'REJECTED',  color:C.rose,    h:'Users don\'t know these categories exist',              o:'They do — and actively avoid them. Awareness-only plays will fail.' },
+  { tag:'CHALLENGED',color:C.amber,   h:'Frustration is dominated by refunds/support',          o:'Refund friction is a symptom; the real blocker is missing pre-purchase info.' },
+  { tag:'PARTIAL',   color:C.amber,   h:'Price is the primary barrier',                          o:'5 of 7 rank reviews/brand above price; real blocker is fee-to-basket ratio.' },
+  { tag:'VALIDATED', color:C.emerald, h:'Discovery is done TO the user, not WITH them',         o:'Users want a "steering" lever — the correct intervention is control, not more novelty.' }
+];
+
+// Problem framing canvas (Part 3)
+const PROBLEM_CANVAS = [
+  { title:'What is the true problem?', body:'Blinkit only sells non-grocery at full pack size. A shopper who\'d try a ₹20 sample won\'t gamble ₹500–700 on an unfamiliar brand. Two unsolved jobs: "let me try a little" and "prove it won\'t disappoint me."', color:C.accent },
+  { title:'Who is facing it?',         body:'Primary: Habituated Grocery Regular (≥1×/week, ≥3-month tenure). Retargeted to working professionals 25-40 (SDEs, PMs, consultants). Not new/emergency-only users.', color:C.blue },
+  { title:'How do we know it\'s real?', body:'42% of friction reviews cite sizing/price risk. Behaviour: same 15 items reordered weekly. Interviews: "I\'d try it if it were ₹20, not ₹500" — echoed across 7 sessions. Cross-checked on 200+ QA sample.', color:C.emerald },
+  { title:'Value for the user',        body:'Sample a new category for the price of a snack. Visible refund promise replaces "what if it\'s wrong?". Shift from "never" to "maybe" without changing checkout habits.', color:C.purple },
+  { title:'Value for Blinkit',         body:'Moves the CCAR North Star without touching the 98.6% grocery funnel. Second-purchase rate (41%) is the real prize — trial is the entry ticket. 1,150 SKUs across 14 categories already ready.', color:C.emerald },
+  { title:'Why solve it now?',         body:'Electronics is already the densest non-grocery corpus category. Return/complaint rate on trialled categories sits at a low 4.2%. The AI review-analysis engine + persona logic are already built and live.', color:C.amber }
+];
+
+// Root cause loop (familiarity loop)
+const ROOT_LOOP = [
+  { text:'App opens habit-first — grocery intent', color:C.emerald, bg:'rgba(16,185,129,0.15)' },
+  { text:'Safest bet: reorder the known 15 SKUs', color:C.text2, bg:'rgba(148,163,184,0.08)' },
+  { text:'No low-effort way to sample something new', color:C.text2, bg:'rgba(148,163,184,0.08)' },
+  { text:'Repetition reads as "satisfaction" → loop closes ↺', color:C.amber, bg:'rgba(245,158,11,0.15)' }
+];
+
+// Impact sizing table
+const IMPACT_SIZING = [
+  ['Monthly Active Customers (base)',           '1,000,000', false],
+  ['× Habituated grocery regulars (54%)',       '540,000',   false],
+  ['× No cross-category buy yet (98.2%)',       '530,000',   false],
+  ['Addressable trial audience',                '530,000',   'header'],
+  ['Trial rate today (6.4%)',                   '33,920',    false],
+  ['+28% predicted lift with <₹30 pod',         '+9,498',    'positive'],
+  ['Incremental activations / M / 1M MAC',      '≈9,500',    'goal']
+];
+
+// Blinkit Trusted per-category picks (from mark_trusted_picks.py output)
+const TRUSTED_BY_CAT = [
+  { cat:'Jewellery',           n:8, top:'GIVA earrings — 4.6★ · 82% reorder' },
+  { cat:'Books',               n:7, top:'Fingerprint — Train to Pakistan · 4.6★' },
+  { cat:'Spiritual',           n:7, top:'Cycle Pure Agarbatti · 4.6★' },
+  { cat:'Stationery & Games',  n:7, top:'Parker Trimax Pen · 4.8★' },
+  { cat:'Sports & Outdoor',    n:6, top:'SS Tennis Bat Full Size · 4.5★' },
+  { cat:'Pet Care',            n:5, top:'Pedigree Adult 1.2kg · 4.4★' },
+  { cat:'Electronics',         n:4, top:'JBL Bassheads Pro · 4.8★' },
+  { cat:'Home Cleaning',       n:4, top:'Ariel Matic Quick Wash · 4.5★' },
+  { cat:'Cold Drinks',         n:4, top:'Mountain Dew Diet 1.25L · 4.8★' },
+  { cat:'Instant & Frozen',    n:4, top:'Yippee Masala Noodles · 4.5★' },
+  { cat:'Supplements',         n:4, top:'GNC Biozyme Whey 1kg · 4.9★' },
+  { cat:'Atta, Rice & Dal',    n:3, top:'Fortune Multigrain Atta · 4.4★' },
+  { cat:'Baby Care',           n:3, top:'Himalaya Diaper Pants · 4.5★' },
+  { cat:'Biscuits & Bakery',   n:3, top:'Britannia Good Day · 4.5★' },
+  { cat:'Dairy, Bread & Eggs', n:3, top:'Amul Milk Gold 500ml · 4.7★' },
+  { cat:'Intimate Care',       n:3, top:'Durex Extra Time · 4.4★' },
+  { cat:'Masala & Oil',        n:3, top:'Fortune Kachi Ghani 5L · 4.4★' },
+  { cat:'Munchies',            n:3, top:'Bingo Magic Masala · 4.4★' },
+  { cat:'Beauty & Personal',   n:3, top:'Mamaearth Niacinamide Serum · 4.7★' },
+  { cat:'Pharmacy',            n:3, top:'Dr. Ortho Pain Relief · 4.3★' },
+  { cat:'Sweet Tooth',         n:3, top:'Cadbury Dark 150g · 4.6★' },
+  { cat:'Tea & Coffee',        n:3, top:'Taj Mahal Green Tea · 4.5★' },
+  { cat:'Veg & Fruits',        n:3, top:'Farm Fresh Royal Gala Apple · 4.3★' }
+];
+
+// 5-step pipeline
+const PIPELINE = [
+  { icon:'📥', t:'INGEST',      n:'01', b:'YouTube · Reddit · Play/App Store · PissedConsumer · HackerNews (32,999 raw items)' },
+  { icon:'🎯', t:'FILTER',      n:'02', b:'Discovery-relevance gate keeps cross-category / trial feedback (5,420 relevant)' },
+  { icon:'🧩', t:'CLUSTER',     n:'03', b:'LLM embeds reviews into friction themes — no forced categories' },
+  { icon:'🧠', t:'SYNTHESISE',  n:'04', b:'Sentiment, keywords, quotes + 8 discovery-question answers' },
+  { icon:'📊', t:'PRESENT',     n:'05', b:'This live dashboard tab — paste, upload or sample, re-run any time' }
+];
+
+// The 8 discovery questions — enriched with data + link to a dashboard section
 const QUESTIONS = [
   {
     q:'Why do users repeatedly buy from the same categories?',
-    a:'Quick-commerce forms deep, narrow habit-grooves — <b>grocery+snacks mentions (1,773) outweigh ALL non-grocery categories combined (1,011)</b> by 1.75:1 in the 32,999-item corpus, and only <b>8.0%</b> of the corpus carries any category signal at all. The "Blinkit = grocery" mental model is reconfirmed on every high-intent open.',
+    a:'Quick-commerce forms deep, narrow habit-grooves. In the 32,999-item corpus, grocery+snacks (1,773) outweigh ALL non-grocery combined (1,011) by <b>1.75×</b>, and only <b>8.0%</b> of the corpus carries any category signal. Habit reads as satisfaction to the algorithm, so nothing prompts exploration.',
     tag:'Pattern D · Habit Groove',
-    evidence:'Corpus category-share table + Pattern D',
-    link:{ href:'#clusters', label:'See Friction Heatmap →' }
+    evidence:'Corpus category-share table',
+    link:{ href:'#discovery', label:'See data-source breakdown →' }
   },
   {
     q:'What prevents users from exploring new categories?',
-    a:'Trying a new category is a <b>high-risk, low-information, fee-penalised</b> decision, and per Pattern A one bad first trial permanently closes it. Corpus breakdown: <b>Sizing Risk 42% · Price Barrier 31% · Return Fear 18%</b> = 91% of negative reviews. Users behave rationally by not trying.',
+    a:'Trying is a <b>high-risk, low-info, fee-penalised</b> decision, and per Pattern A one bad first trial permanently closes it. Corpus breakdown: <b>Sizing 42% · Price 31% · Return Fear 18%</b> = 91% of negative reviews. Rational avoidance.',
     tag:'Root cause · 3 clusters',
     evidence:'Friction Heatmap · 5,420 reviews',
-    link:{ href:'#clusters', label:'See the 3 friction clusters →' }
+    link:{ href:'#insights', label:'See friction clusters →' }
   },
   {
     q:'How do users discover products today?',
-    a:'They <b>do not browse</b> — they arrive high-intent and go straight to search or a known category (Pattern E). R1 has never noticed a homepage banner; R2 goes straight to search. Top-of-funnel banners/push notifications are <b>structurally ignored</b>, so any solution must render <i>inside</i> the flow, not compete for attention outside it.',
+    a:'They <b>don\'t browse</b> — arrive high-intent, go straight to search or a known category (Pattern E). R1 never notices banners; R2 goes straight to search. Top-of-funnel awareness plays are <b>structurally ignored</b> — any solution must render <i>inside</i> the flow.',
     tag:'Pattern E · Discovery Bypass',
-    evidence:'Interviews R1, R2, R7 + Pattern E',
-    link:{ href:'#workflow', label:'Run the live review-analysis workflow →' }
+    evidence:'Interviews R1, R2, R7',
+    link:{ href:'#research', label:'See interview snippets →' }
   },
   {
     q:'What role do habits play in shopping behaviour?',
-    a:'Habit is <b>both the win and the constraint</b>: it drives retention (high frequency in grocery) but locks users into single lanes, turning category concentration into a <b>single point of failure</b> (R4, the most engaged user in the sample, already churned fresh produce to a competitor). Habit reads as satisfaction to the algorithm, so nothing prompts exploration.',
+    a:'Habit is <b>both the win and the constraint</b>: drives retention (high grocery frequency) but locks users into single lanes — turning category concentration into a <b>single point of failure</b>. R4, the most engaged user, already churned fresh produce to a competitor.',
     tag:'Context · Retention paradox',
-    evidence:'Hypothesis Scorecard + R4 warning signal',
-    link:{ href:'#validation', label:'See Insight Validation →' }
-  },
-  {
-    q:'What information do users need before trying a new category?',
-    a:'Credible, <b>product-specific peer evidence</b> — R1 wants "good reviews on the specific product, not generic suggestions." <b>5 of 7</b> respondents rank reviews/brand ABOVE price. The Blinkit Trusted Program answers this with 96 rule-based curated picks (avg≥4.3, ratings≥500, repeat≥55%); every badge shows its reason ("4.9★ · 1,475+ ratings · 58% reorder").',
-    tag:'Pattern B · Peer Evidence',
-    evidence:'Blinkit Trusted Program · shipped',
-    link:{ href:'#trusted', label:'See Blinkit Trusted Program →' }
-  },
-  {
-    q:'What frustrations emerge repeatedly?',
-    a:'On the surface, refund/support friction dominates complaints (<b>3,051 of 7,925</b> forum complaints). But per hypothesis validation, that\'s a <b>symptom</b> — the real blocker is the <b>missing pre-purchase information</b> that prevents the trial entirely. Fixing refund UX without fixing pre-purchase trust would still leave the funnel broken upstream.',
-    tag:'Corpus · Symptom vs. cause',
-    evidence:'PissedConsumer complaints + hypothesis scorecard',
+    evidence:'Hypothesis scorecard + R4 warning',
     link:{ href:'#validation', label:'See hypothesis scorecard →' }
   },
   {
+    q:'What information do users need before trying a new category?',
+    a:'Credible <b>product-specific peer evidence</b>. R1 wants "good reviews on the specific product, not generic suggestions." <b>5 of 7</b> rank reviews/brand above price. Blinkit Trusted answers this with 96 rule-based curated picks (avg≥4.3, ratings≥500, repeat≥55%) — every badge shows its reason.',
+    tag:'Pattern B · Peer Evidence',
+    evidence:'Blinkit Trusted Program — shipped',
+    link:{ href:'#trusted', label:'See Trusted Program →' }
+  },
+  {
+    q:'What frustrations emerge repeatedly?',
+    a:'On surface, refund/support dominates (<b>3,051 of 7,925</b> forum complaints). But the real blocker is the <b>missing pre-purchase information</b>. Fixing refund UX without fixing pre-purchase trust would still leave the funnel broken upstream.',
+    tag:'Corpus · Symptom vs. cause',
+    evidence:'Complaint typology chart',
+    link:{ href:'#discovery', label:'See complaint typology →' }
+  },
+  {
     q:'Which user segments are more likely to experiment?',
-    a:'<b>Habituated Grocery Regulars</b> — ≥1×/week, ≥3-month tenure — who already trust Blinkit\'s logistics (shortest distance to behaviour change). Retargeted now to <b>working professionals 25-40</b> (SDEs, PMs, consultants). Out of scope: new users (<1 month, forming core habit) and emergency-only users (insufficient session volume).',
+    a:'<b>Habituated Grocery Regulars</b> — ≥1×/week, ≥3-month tenure — who already trust logistics. Retargeted to <b>working professionals 25-40</b> (SDEs, PMs, consultants). ~54% of MAC fit the definition. Not new (<1 mo) or emergency-only.',
     tag:'Segment · Habituated regulars',
-    evidence:'Segment definition · shipped personas',
-    link:{ href:'#kpis', label:'See Executive KPIs →' }
+    evidence:'Segment sizing → CCAR funnel',
+    link:{ href:'#problem', label:'See impact sizing →' }
   },
   {
     q:'What unmet needs emerge consistently?',
-    a:'Three unmet jobs: (1) <b>on-platform trust</b> that substitutes for a friend\'s recommendation, (2) <b>de-risked experimentation</b> without a fee penalty on small baskets, (3) <b>consolidation</b> into fewer trusted platforms so users stop leaking non-grocery discovery to Amazon/Myntra. The MVP addresses jobs 1 & 2 directly.',
+    a:'Three unmet jobs: (1) <b>on-platform trust</b> substituting for a friend\'s rec, (2) <b>de-risked experimentation</b> without fee penalty on small baskets, (3) <b>consolidation</b> so users stop leaking non-grocery discovery to Amazon/Myntra. The MVP addresses (1) & (2) directly.',
     tag:'Unmet need · MVP-linked',
-    evidence:'Trial Confidence Engine · Part 4 MVP',
-    link:{ href:'#bridge', label:'Launch the live MVP prototype →' }
+    evidence:'Trial Confidence Engine · Part 4',
+    link:{ href:'#mvp', label:'Launch the live MVP →' }
   }
-];
-
-const METHOD = [
-  { n:'1', t:'Gather at scale', d:'5,420 public items — Play Store, App Store, Reddit &amp; forums' },
-  { n:'2', t:'LLM cluster + sentiment', d:'Embed &amp; density-cluster into friction themes; score sentiment/confidence' },
-  { n:'3', t:'Manual QA sample', d:'200+ random classifications + the lowest-confidence 10% bucket re-checked' },
-  { n:'4', t:'Primary-research validation', d:'7 in-depth interviews test each corpus-derived hypothesis' }
-];
-const HYPOTHESES = [
-  { tag:'VALIDATED', color:C.emerald, h:'Non-grocery trials fail disproportionately', o:'Failures are terminal, not just annoying (R5: 3 faulty electronics → never again).' },
-  { tag:'REJECTED', color:C.rose, h:'Users don’t know these categories exist', o:'They do — and actively avoid them. Awareness-only plays will fail.' },
-  { tag:'CHALLENGED', color:C.amber, h:'Frustration is dominated by refunds/support', o:'Refund friction is a symptom; the real blocker is missing pre-purchase info.' },
-  { tag:'PARTIAL', color:C.amber, h:'Price is the primary barrier', o:'5 of 7 rank reviews/brand above price; real blocker is the fee-to-basket ratio.' }
 ];
 
 const SAMPLE_REVIEWS = [
@@ -178,75 +275,6 @@ const SAMPLE_REVIEWS = [
   "Honestly I'd explore more if returns were easy and instant on these apps."
 ];
 
-const PIPELINE = [
-  { icon:'db',     t:'Play Store Customer Reviews', b:'5,420 raw reviews · Play Store, App Store &amp; forums (Blinkit / Instamart / Zepto)', tag:'raw signal' },
-  { icon:'brain',  t:'LLM Clustering & Sentiment', b:'Embed → density-cluster into friction themes; score sentiment &amp; confidence per cluster', tag:'themes' },
-  { icon:'bulb',   t:'PM Insight Hypothesis', b:'Name the root cause (Size &amp; Price hesitation) and derive a testable micro-trial hypothesis', tag:'insight' },
-  { icon:'rocket', t:'Trial & Confidence Layer', b:'Ship the &lt;₹30 micro-trial MVP with refund + return badges — insight becomes execution', tag:'MVP action' }
-];
-
-// ============================================================================
-// STATIC ICONS
-// ============================================================================
-function renderStaticIcons(){
-  const m={ nv1:['grid',18], nvT:['verify',18], nv2:['branch',18], nvQ:['help',18], nv3:['layers',18], nvV:['verify',18], nv4:['rocket',18], nvPipe:['branch',17], hdrPipe:['branch',17],
-    lb1:['target',15], lbWf:['branch',15], lbQ:['help',15], lb3:['layers',15], lbV:['verify',15],
-    wfIcon:['db',18], wfBolt:['bolt',18], mIcon:['branch',22], mClose:['close',19], mVerify:['verify',20] };
-  for(const [id,[n,s]] of Object.entries(m)){ const el=document.getElementById(id); if(el) el.innerHTML=icon(n,s); }
-}
-
-// ============================================================================
-// KPIs
-// ============================================================================
-function renderKpis(){
-  document.getElementById('kpiRow').innerHTML = KPIS.map(k=>`
-    <div class="card" style="padding:16px 17px;">
-      <div style="width:34px; height:34px; border-radius:9px; background:${k.color}22; display:flex; align-items:center; justify-content:center; color:${k.color};">${icon(k.icon,18)}</div>
-      <div style="font-size:${k.valueSize||30}px; font-weight:800; line-height:1.12; margin-top:12px; color:${k.color==='#F43F5E'||k.color==='#10B981'?k.color:'var(--text)'};">${k.value}</div>
-      <div style="font-size:12.5px; font-weight:700; color:var(--text-2); margin-top:5px;">${k.label}</div>
-      <div style="font-size:11px; color:var(--muted); margin-top:2px;">${k.sub}</div>
-      ${k.bar!=null?`<div style="height:6px; background:var(--raise); border-radius:999px; margin-top:11px; overflow:hidden;"><div style="width:${(k.bar/(k.barMax||100))*100}%; height:100%; background:${k.color}; border-radius:999px;"></div></div>`:''}
-    </div>`).join('');
-}
-
-// ============================================================================
-// LIVE REVIEW-ANALYSIS WORKFLOW
-// ============================================================================
-function loadSampleReviews(){
-  document.getElementById('reviewInput').value = SAMPLE_REVIEWS.join('\n');
-  updateReviewMeta();
-}
-function uploadReviews(ev){
-  const f = ev.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = () => { document.getElementById('reviewInput').value = String(r.result).replace(/,/g, '\n'); updateReviewMeta(); };
-  r.readAsText(f);
-}
-function updateReviewMeta(){
-  const n = document.getElementById('reviewInput').value.split('\n').map(s=>s.trim()).filter(Boolean).length;
-  document.getElementById('reviewMeta').textContent = n + ' review' + (n!==1?'s':'') + ' loaded';
-}
-const prefersReduced=()=>window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-async function runWorkflow(){
-  const reviews = document.getElementById('reviewInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  const out = document.getElementById('workflowOutput');
-  if(!reviews.length){ out.innerHTML = `<div class="card" style="padding:16px; color:var(--muted); font-size:13px;">Paste some reviews (one per line) or click “Load sample reviews”, then run.</div>`; return; }
-  const btn = document.getElementById('runBtn'); btn.disabled = true; btn.style.opacity = '0.6';
-  out.innerHTML = `<div class="card" style="padding:24px; display:flex; align-items:center; gap:10px; color:var(--text-2); font-size:13.5px; font-weight:600;">
-    <span style="color:var(--accent); animation:shimmer 1s infinite;">${icon('brain',20)}</span>
-    Running live pipeline on ${reviews.length} reviews · clustering · scoring sentiment · extracting quotes…</div>`;
-  out.scrollIntoView({behavior:prefersReduced()?'auto':'smooth', block:'nearest'});
-  try{
-    const res = await fetch('/api/analyze-reviews', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ reviews }), signal: AbortSignal.timeout(30000) });
-    if(!res.ok) throw new Error('http '+res.status);
-    const d = await res.json(); if(!d.success) throw new Error(d.error||'failed');
-    renderWorkflowOutput(d.analysis);
-  }catch(e){
-    out.innerHTML = `<div class="card" style="padding:18px; color:var(--rose); font-size:13px;">Live analysis unavailable right now (${String(e.message)}). Check /api/health, or try again.</div>`;
-  }finally{ btn.disabled=false; btn.style.opacity='1'; }
-}
-
 const QLABELS = {
   why_repeat_same_categories:'Why users repeat the same categories',
   what_prevents_new_categories:'What prevents exploring new categories',
@@ -258,271 +286,691 @@ const QLABELS = {
   unmet_needs:'Consistently unmet needs'
 };
 
-function renderWorkflowOutput(a){
+// ============================================================================
+// COMMON CHART.JS DEFAULTS (colorblind-safe, dark-mode ready)
+// ============================================================================
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.color = C.text2;
+  Chart.defaults.font.family = 'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.plugins.legend.labels.boxWidth = 8;
+  Chart.defaults.plugins.legend.labels.boxHeight = 8;
+  Chart.defaults.plugins.legend.labels.padding = 10;
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.tooltip.backgroundColor = C.raise;
+  Chart.defaults.plugins.tooltip.borderColor = C.border;
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+  Chart.defaults.plugins.tooltip.titleColor = C.text;
+  Chart.defaults.plugins.tooltip.bodyColor = C.text2;
+}
+
+// ============================================================================
+// SECTION 1 · EXECUTIVE SNAPSHOT
+// ============================================================================
+function renderSnapshotKpis() {
+  document.getElementById('snapshotKpis').innerHTML = SNAPSHOT_KPIS.map(k => `
+    <div class="card" style="padding:16px 18px;">
+      <div class="kpi-value" style="color:${k.color};">${k.value}</div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      <div style="margin-top:8px; font-size:10.5px; font-weight:700; color:${C.emerald};">▲ ${k.trend}</div>
+    </div>
+  `).join('');
+}
+
+function renderCcarLine() {
+  const ctx = document.getElementById('ccarLineChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type:'line',
+    data:{
+      labels: CCAR_TIMELINE.labels,
+      datasets:[
+        {
+          label:'CCAR %',
+          data: CCAR_TIMELINE.values,
+          borderColor: C.accent,
+          backgroundColor: 'rgba(242,201,76,0.15)',
+          borderWidth: 2.5,
+          pointRadius: 3,
+          pointBackgroundColor: C.accent,
+          tension: 0.35,
+          fill: true
+        },
+        {
+          label:'Target (2.5%)',
+          data: CCAR_TIMELINE.labels.map(() => CCAR_TIMELINE.target),
+          borderColor: C.emerald,
+          borderWidth: 1.5,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom' } },
+      scales:{
+        y:{ beginAtZero:false, grid:{ color:C.border }, ticks:{ callback:v => v+'%' } },
+        x:{ grid:{ display:false } }
+      }
+    }
+  });
+}
+
+function renderCategoryShareDonut() {
+  const ctx = document.getElementById('categoryShareDonut');
+  if (!ctx) return;
+  const data = CATEGORY_COVERAGE.filter(c => c.name !== 'General (no signal)');
+  new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels: data.map(d => d.name),
+      datasets:[{
+        data: data.map(d => d.pct),
+        backgroundColor: data.map((_,i) => PALETTE[i % PALETTE.length]),
+        borderColor: C.surface,
+        borderWidth: 2
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{
+        legend:{ position:'right', labels:{ boxWidth:8, padding:8, font:{ size:10.5 } } },
+        tooltip:{ callbacks:{ label:c => `${c.label}: ${c.parsed}% of corpus` } }
+      }
+    }
+  });
+}
+
+// ============================================================================
+// SECTION 2 · PART 1 — DISCOVERY ENGINE
+// ============================================================================
+function renderPipeline() {
+  const el = document.getElementById('pipelineFlow');
+  if (!el) return;
+  el.innerHTML = PIPELINE.map((p, i) => `
+    <div style="flex:1; display:flex; align-items:center; min-width:150px;">
+      <div style="flex:1; background:var(--raise); border:1px solid var(--border); border-radius:12px; padding:12px 14px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+          <span style="font-size:18px;">${p.icon}</span>
+          <span style="font-size:9.5px; font-weight:800; color:var(--accent); letter-spacing:.05em;">STEP ${p.n}</span>
+        </div>
+        <div style="font-size:13px; font-weight:800; margin-bottom:4px;">${p.t}</div>
+        <div style="font-size:10.5px; color:var(--muted); line-height:1.4;">${p.b}</div>
+      </div>
+      ${i < PIPELINE.length - 1 ? `<span style="color:var(--faint); padding:0 4px; font-size:16px;">→</span>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderSourcesBar() {
+  const ctx = document.getElementById('sourcesBarChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: DATA_SOURCES.map(s => s.source),
+      datasets:[{
+        label:'Items',
+        data: DATA_SOURCES.map(s => s.count),
+        backgroundColor: DATA_SOURCES.map(s => s.color),
+        borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ grid:{ color:C.border }, ticks:{ callback:v => v >= 1000 ? (v/1000)+'K' : v } },
+        y:{ grid:{ display:false }, ticks:{ font:{ size:10.5 } } }
+      }
+    }
+  });
+}
+
+function renderCategoryCoverage() {
+  const ctx = document.getElementById('categoryCoverageChart');
+  if (!ctx) return;
+  const data = CATEGORY_COVERAGE.filter(c => c.name !== 'General (no signal)');
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: data.map(d => d.name),
+      datasets:[{
+        label:'% of corpus',
+        data: data.map(d => d.pct),
+        backgroundColor: data.map(d => d.color),
+        borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label:c => `${c.parsed}% · ${data[c.dataIndex].mentions.toLocaleString()} mentions · ${data[c.dataIndex].phase}` } }
+      },
+      scales:{
+        x:{ grid:{ color:C.border }, ticks:{ callback:v => v+'%' } },
+        y:{ grid:{ display:false }, ticks:{ font:{ size:10.5 } } }
+      }
+    }
+  });
+}
+
+function renderComplaintTypology() {
+  const ctx = document.getElementById('complaintTypologyChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: COMPLAINT_TYPOLOGY.map(c => c.type),
+      datasets:[{
+        label:'Complaints',
+        data: COMPLAINT_TYPOLOGY.map(c => c.count),
+        backgroundColor: COMPLAINT_TYPOLOGY.map(c => c.color),
+        borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ grid:{ color:C.border } },
+        y:{ grid:{ display:false }, ticks:{ font:{ size:10.5 } } }
+      }
+    }
+  });
+}
+
+// ============================================================================
+// SECTION 3 · INSIGHTS
+// ============================================================================
+function renderClusterBars() {
+  const el = document.getElementById('clusterBars');
+  if (!el) return;
+  el.innerHTML = CLUSTERS.filter(c => c.name !== 'Other').map(c => `
+    <div style="margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;">
+        <span>${c.name}</span>
+        <span style="color:${c.color}; font-family:ui-monospace,monospace;">${c.pct}%</span>
+      </div>
+      <div style="height:7px; background:var(--raise); border-radius:999px; overflow:hidden; margin-top:4px;">
+        <div style="width:${c.pct}%; height:100%; background:${c.color}; border-radius:999px;"></div>
+      </div>
+      ${c.quote ? `<div style="font-size:11px; color:var(--muted); font-style:italic; margin-top:5px;">"${c.quote}"</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderClusterDonut() {
+  const ctx = document.getElementById('clusterDonutChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels: CLUSTERS.map(c => c.name),
+      datasets:[{
+        data: CLUSTERS.map(c => c.pct),
+        backgroundColor: CLUSTERS.map(c => c.color),
+        borderColor: C.surface,
+        borderWidth: 2
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'55%',
+      plugins:{
+        legend:{ position:'bottom', labels:{ boxWidth:8, padding:9 } },
+        tooltip:{ callbacks:{ label:c => `${c.label}: ${c.parsed}% of negative reviews` } }
+      }
+    }
+  });
+}
+
+function renderSentimentDonut() {
+  const ctx = document.getElementById('sentimentDonut');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:['Negative','Neutral','Positive'],
+      datasets:[{
+        data:[SENTIMENT.negative, SENTIMENT.neutral, SENTIMENT.positive],
+        backgroundColor:[C.rose, C.faint, C.emerald],
+        borderColor: C.surface,
+        borderWidth: 2
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'55%',
+      plugins:{
+        legend:{ position:'bottom', labels:{ boxWidth:8, padding:9 } },
+        tooltip:{ callbacks:{ label:c => `${c.label}: ${c.parsed}%` } }
+      }
+    }
+  });
+}
+
+function renderDensityHeatmap() {
+  const el = document.getElementById('densityHeatmap');
+  if (!el) return;
+  const rows = DENSITY_PHASES.map(d => {
+    const dCol = d.density === 'dense' ? C.emerald : C.amber;
+    return `
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:9px 12px; font-size:12.5px; font-weight:700;">${d.cat}</td>
+        <td style="padding:9px 12px; font-size:12px; color:var(--text-2); font-family:ui-monospace,monospace;">${d.mentions.toLocaleString()}</td>
+        <td style="padding:9px 12px;"><span class="tag-chip" style="background:${dCol};">${d.density.toUpperCase()}</span></td>
+        <td style="padding:9px 12px; font-size:12px; color:var(--text-2);">${d.phase}</td>
+        <td style="padding:9px 12px; font-size:11.5px; color:var(--muted);">${d.badge}</td>
+      </tr>`;
+  }).join('');
+  el.innerHTML = `
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:var(--raise);">
+          <th style="text-align:left; padding:8px 12px; font-size:10.5px; text-transform:uppercase; color:var(--muted); font-weight:700;">Category</th>
+          <th style="text-align:left; padding:8px 12px; font-size:10.5px; text-transform:uppercase; color:var(--muted); font-weight:700;">Mentions</th>
+          <th style="text-align:left; padding:8px 12px; font-size:10.5px; text-transform:uppercase; color:var(--muted); font-weight:700;">Density</th>
+          <th style="text-align:left; padding:8px 12px; font-size:10.5px; text-transform:uppercase; color:var(--muted); font-weight:700;">Phase</th>
+          <th style="text-align:left; padding:8px 12px; font-size:10.5px; text-transform:uppercase; color:var(--muted); font-weight:700;">Rationale</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ============================================================================
+// SECTION 4 · LIVE WORKFLOW (unchanged from v2)
+// ============================================================================
+function loadSampleReviews() {
+  document.getElementById('reviewInput').value = SAMPLE_REVIEWS.join('\n');
+  updateReviewMeta();
+}
+function uploadReviews(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { document.getElementById('reviewInput').value = String(r.result).replace(/,/g, '\n'); updateReviewMeta(); };
+  r.readAsText(f);
+}
+function updateReviewMeta() {
+  const n = document.getElementById('reviewInput').value.split('\n').map(s => s.trim()).filter(Boolean).length;
+  document.getElementById('reviewMeta').textContent = n + ' review' + (n !== 1 ? 's' : '') + ' loaded';
+}
+const prefersReduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+async function runWorkflow() {
+  const reviews = document.getElementById('reviewInput').value.split('\n').map(s => s.trim()).filter(Boolean);
+  const out = document.getElementById('workflowOutput');
+  if (!reviews.length) { out.innerHTML = `<div class="card" style="padding:16px; color:var(--muted); font-size:13px;">Paste reviews (one per line) or click "Load sample", then run.</div>`; return; }
+  const btn = document.getElementById('runBtn'); btn.disabled = true; btn.style.opacity = '0.6';
+  out.innerHTML = `<div class="card" style="padding:24px; display:flex; align-items:center; gap:10px; color:var(--text-2); font-size:13.5px; font-weight:600;">
+    <span style="color:var(--accent); animation:shimmer 1s infinite;">🧠</span>
+    Running live pipeline on ${reviews.length} reviews · clustering · scoring sentiment · extracting quotes…</div>`;
+  out.scrollIntoView({ behavior: prefersReduced() ? 'auto' : 'smooth', block:'nearest' });
+  try {
+    const res = await fetch('/api/analyze-reviews', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ reviews }), signal: AbortSignal.timeout(30000) });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const d = await res.json(); if (!d.success) throw new Error(d.error || 'failed');
+    renderWorkflowOutput(d.analysis);
+  } catch (e) {
+    out.innerHTML = `<div class="card" style="padding:18px; color:var(--rose); font-size:13px;">Live analysis unavailable right now (${String(e.message)}). Check /api/health, or try again.</div>`;
+  } finally { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+function renderWorkflowOutput(a) {
   const s = a.sentiment || { negative:0, neutral:0, positive:0 };
-  const seg = (w,c)=>`<div style="width:${w}%; background:${c};"></div>`;
-  const themes = (a.themes||[]).map(t=>{
-    const col = t.sentiment==='positive'?C.emerald:t.sentiment==='neutral'?C.faint:C.rose;
+  const seg = (w, c) => `<div style="width:${w}%; background:${c};"></div>`;
+  const themes = (a.themes || []).map(t => {
+    const col = t.sentiment === 'positive' ? C.emerald : t.sentiment === 'neutral' ? C.faint : C.rose;
     return `<div style="background:var(--raise); border:1px solid var(--border); border-radius:11px; padding:11px 13px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
-        <span style="font-size:13px; font-weight:800;">${t.name||'Theme'}</span>
-        <span style="font-size:13px; font-weight:800; color:${col}; font-variant-numeric:tabular-nums;">${t.share!=null?t.share+'%':''}</span></div>
-      <div style="height:6px; background:#0B1120; border-radius:999px; overflow:hidden;"><div style="width:${t.share||0}%; height:100%; background:${col};"></div></div>
-      ${t.quote?`<div style="display:flex; gap:6px; margin-top:7px;"><span style="color:${col}; flex-shrink:0;">${icon('quote',13)}</span><span style="font-size:11.5px; font-style:italic; color:var(--text-2); line-height:1.4;">${t.quote}</span></div>`:''}
-    </div>`; }).join('');
-  const kw = (a.keywords||[]).map(k=>`<span style="font-size:11px; font-weight:600; color:var(--text-2); background:var(--surface2); border:1px solid var(--border); padding:4px 10px; border-radius:999px;">${k}</span>`).join('');
+      <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+        <span style="font-size:13px; font-weight:800;">${t.name || 'Theme'}</span>
+        <span style="font-size:13px; font-weight:800; color:${col}; font-variant-numeric:tabular-nums;">${t.share != null ? t.share + '%' : ''}</span>
+      </div>
+      <div style="height:6px; background:#0B1120; border-radius:999px; overflow:hidden;"><div style="width:${t.share || 0}%; height:100%; background:${col};"></div></div>
+      ${t.quote ? `<div style="font-size:11.5px; font-style:italic; color:var(--text-2); line-height:1.4; margin-top:6px;">"${t.quote}"</div>` : ''}
+    </div>`;
+  }).join('');
+  const kw = (a.keywords || []).map(k => `<span style="font-size:11px; font-weight:600; color:var(--text-2); background:var(--surface2); border:1px solid var(--border); padding:4px 10px; border-radius:999px;">${k}</span>`).join('');
   const qi = a.question_insights || {};
-  const qrows = Object.keys(QLABELS).map(key=> qi[key] ? `
+  const qrows = Object.keys(QLABELS).map(key => qi[key] ? `
     <div style="display:flex; gap:9px; padding:9px 0; border-bottom:1px solid var(--border);">
-      <span style="color:var(--accent); flex-shrink:0; margin-top:1px;">${icon('help',15)}</span>
-      <div><div style="font-size:11.5px; font-weight:700; color:var(--text);">${QLABELS[key]}</div>
+      <span style="color:var(--accent); flex-shrink:0; margin-top:1px;">❓</span>
+      <div><div style="font-size:11.5px; font-weight:700;">${QLABELS[key]}</div>
       <div style="font-size:12px; color:var(--text-2); line-height:1.5; margin-top:2px;">${qi[key]}</div></div>
     </div>` : '').join('');
 
   document.getElementById('workflowOutput').innerHTML = `
   <div class="card" style="padding:0; overflow:hidden;">
     <div style="display:flex; align-items:center; gap:9px; padding:14px 20px; background:var(--raise); border-bottom:1px solid var(--border);">
-      <span style="color:var(--emerald);">${icon('check',18,2.5)}</span>
+      <span style="color:var(--emerald);">✓</span>
       <span style="font-size:13.5px; font-weight:800;">Live Analysis Complete</span>
-      <span style="font-size:11px; color:var(--muted); margin-left:auto;">${a.reviews_analyzed||0} reviews · via Gemini/Groq LLM</span>
+      <span style="font-size:11px; color:var(--muted); margin-left:auto;">${a.reviews_analyzed || 0} reviews · via Gemini/Groq LLM</span>
     </div>
     <div style="padding:18px 20px;">
-      <div class="grid g2" style="grid-template-columns:1fr 1fr;">
+      <div class="grid" style="grid-template-columns:1fr 1fr;">
         <div>
           <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Sentiment Breakdown</div>
-          <div style="display:flex; height:14px; border-radius:999px; overflow:hidden; gap:2px; background:var(--raise);">${seg(s.negative,C.rose)}${seg(s.neutral,C.faint)}${seg(s.positive,C.emerald)}</div>
+          <div style="display:flex; height:14px; border-radius:999px; overflow:hidden; gap:2px; background:var(--raise);">${seg(s.negative, C.rose)}${seg(s.neutral, C.faint)}${seg(s.positive, C.emerald)}</div>
           <div style="display:flex; gap:14px; margin-top:9px; font-size:11.5px;">
             <span style="color:var(--rose); font-weight:700;">● ${s.negative}% Neg</span>
             <span style="color:var(--muted); font-weight:700;">● ${s.neutral}% Neu</span>
-            <span style="color:var(--emerald); font-weight:700;">● ${s.positive}% Pos</span></div>
+            <span style="color:var(--emerald); font-weight:700;">● ${s.positive}% Pos</span>
+          </div>
           <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin:16px 0 8px;">Extracted Keywords</div>
-          <div style="display:flex; flex-wrap:wrap; gap:7px;">${kw||'<span style="color:var(--faint);font-size:12px;">—</span>'}</div>
+          <div style="display:flex; flex-wrap:wrap; gap:7px;">${kw || '<span style="color:var(--faint);font-size:12px;">—</span>'}</div>
           <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin:16px 0 8px;">Friction Theme Clusters</div>
-          <div style="display:flex; flex-direction:column; gap:9px;">${themes||'<span style="color:var(--faint);font-size:12px;">—</span>'}</div>
+          <div style="display:flex; flex-direction:column; gap:9px;">${themes || '<span style="color:var(--faint);font-size:12px;">—</span>'}</div>
         </div>
         <div>
           <div style="font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Answers to the 8 discovery questions (from this input)</div>
-          ${qrows||'<span style="color:var(--faint);font-size:12px;">—</span>'}
+          ${qrows || '<span style="color:var(--faint);font-size:12px;">—</span>'}
         </div>
       </div>
-      ${a.top_insight?`<div style="margin-top:16px; background:var(--accent-dim); border:1px solid rgba(242,201,76,0.3); border-radius:11px; padding:12px 14px;">
-        <div style="display:flex; align-items:center; gap:7px; margin-bottom:4px;"><span style="color:var(--accent);">${icon('bulb',16)}</span><span style="font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--accent);">Top PM Insight</span></div>
-        <div style="font-size:13.5px; color:var(--text); line-height:1.5; font-weight:600;">${a.top_insight}</div></div>`:''}
+      ${a.top_insight ? `<div style="margin-top:16px; background:var(--accent-dim); border:1px solid rgba(242,201,76,0.3); border-radius:11px; padding:12px 14px;">
+        <div style="display:flex; align-items:center; gap:7px; margin-bottom:4px;"><span style="color:var(--accent);">💡</span><span style="font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--accent);">Top PM Insight</span></div>
+        <div style="font-size:13.5px; line-height:1.5; font-weight:600;">${a.top_insight}</div></div>` : ''}
     </div>
   </div>`;
 }
 
 // ============================================================================
-// 8 DISCOVERY Q&A
+// SECTION 5 · PART 2 — INTERVIEWS + PATTERNS
 // ============================================================================
-function renderQuestions(){
-  document.getElementById('questionGrid').innerHTML = QUESTIONS.map((q,i)=>`
-    <div class="card" style="padding:15px 17px; display:flex; flex-direction:column;">
+function renderInterviewees() {
+  const el = document.getElementById('interviewGrid');
+  if (!el) return;
+  el.innerHTML = INTERVIEWEES.map(iv => `
+    <div class="card" style="padding:14px 16px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <div style="width:32px; height:32px; border-radius:8px; background:${iv.color}22; color:${iv.color}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">${iv.id}</div>
+        <div>
+          <div style="font-size:12.5px; font-weight:800;">${iv.role}</div>
+          <div style="font-size:10.5px; color:var(--muted);">Age ${iv.age}</div>
+        </div>
+      </div>
+      <div style="font-size:11.5px; color:var(--text-2); font-style:italic; line-height:1.45; margin-bottom:6px;">"${iv.quote}"</div>
+      <div style="font-size:10px; color:${iv.color}; font-weight:800; text-transform:uppercase; letter-spacing:.03em;">${iv.highlight}</div>
+    </div>
+  `).join('');
+}
+
+function renderPatterns() {
+  const el = document.getElementById('patternCards');
+  if (!el) return;
+  el.innerHTML = PATTERNS.map(p => `
+    <div class="card-raise" style="padding:12px 14px; border-left:3px solid ${p.color};">
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:5px;">
+        <span style="font-size:9.5px; font-weight:800; color:${p.color}; letter-spacing:.06em;">PATTERN ${p.id}</span>
+      </div>
+      <div style="font-size:12.5px; font-weight:800; margin-bottom:4px;">${p.name}</div>
+      <div style="font-size:11.5px; color:var(--text-2); line-height:1.45;">${p.desc}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================================
+// SECTION 6 · HYPOTHESIS SCORECARD
+// ============================================================================
+function renderMethod() {
+  const el = document.getElementById('methodCard');
+  if (!el) return;
+  el.innerHTML = METHOD.map((m, i) => `
+    <div style="display:flex; gap:11px; ${i > 0 ? 'margin-top:12px;' : ''}">
+      <div style="width:26px; height:26px; border-radius:7px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0;">${m.n}</div>
+      <div><div style="font-size:12.5px; font-weight:800;">${m.t}</div>
+      <div style="font-size:11px; color:var(--muted); line-height:1.4; margin-top:2px;">${m.d}</div></div>
+    </div>
+  `).join('');
+}
+
+function renderHypotheses() {
+  const el = document.getElementById('hypothesisScorecard');
+  if (!el) return;
+  el.innerHTML = HYPOTHESES.map(h => `
+    <div style="border-bottom:1px solid var(--border); padding:10px 0;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+        <span class="tag-chip" style="background:${h.color};">${h.tag}</span>
+        <span style="font-size:12.5px; font-weight:700;">${h.h}</span>
+      </div>
+      <div style="font-size:11.5px; color:var(--text-2); line-height:1.45; margin-left:2px;">${h.o}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================================
+// SECTION 7 · PART 3 — PROBLEM FRAMING
+// ============================================================================
+function renderProblemCanvas() {
+  const el = document.getElementById('problemCanvas');
+  if (!el) return;
+  el.innerHTML = PROBLEM_CANVAS.map(p => `
+    <div class="card" style="padding:16px 18px; border-top:3px solid ${p.color};">
+      <div style="font-size:12.5px; font-weight:800; color:${p.color}; margin-bottom:6px;">${p.title}</div>
+      <div style="font-size:12.5px; color:var(--text-2); line-height:1.5;">${p.body}</div>
+    </div>
+  `).join('');
+}
+
+function renderRootCauseLoop() {
+  const el = document.getElementById('rootCauseLoop');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+      ${ROOT_LOOP.map((r, i) => `
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="padding:10px 14px; border-radius:9px; background:${r.bg}; border:1px solid ${r.color}33; text-align:center; font-size:12.5px; font-weight:800; color:${r.color};">${r.text}</div>
+          ${i < ROOT_LOOP.length - 1 ? `<div style="text-align:center; color:var(--faint); font-size:15px;">↓</div>` : ''}
+        </div>
+      `).join('')}
+    </div>
+    <div style="font-size:11.5px; color:var(--muted); line-height:1.45; margin-top:10px;">Self-reinforcing: repeat purchase reads as "satisfaction," so nothing prompts the system to nudge exploration.</div>`;
+}
+
+function renderImpactSizingTable() {
+  const el = document.getElementById('impactSizingTable');
+  if (!el) return;
+  el.innerHTML = IMPACT_SIZING.map(row => {
+    const [label, value, kind] = row;
+    if (kind === 'header') return `<tr style="background:var(--accent-dim); border-top:1px solid var(--accent);"><td style="padding:9px 12px; font-size:12.5px; font-weight:800;">${label}</td><td style="padding:9px 12px; text-align:right; font-size:12.5px; font-weight:800; font-family:ui-monospace,monospace;">${value}</td></tr>`;
+    if (kind === 'positive') return `<tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px; font-size:12px;">${label}</td><td style="padding:9px 12px; text-align:right; font-size:12.5px; font-weight:800; font-family:ui-monospace,monospace; color:${C.emerald};">${value}</td></tr>`;
+    if (kind === 'goal') return `<tr style="background:${C.emerald}22;"><td style="padding:10px 12px; font-size:12.5px; font-weight:800; color:${C.emerald};">${label}</td><td style="padding:10px 12px; text-align:right; font-size:13.5px; font-weight:800; font-family:ui-monospace,monospace; color:${C.emerald};">${value}</td></tr>`;
+    return `<tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 12px; font-size:12px;">${label}</td><td style="padding:9px 12px; text-align:right; font-size:12px; font-family:ui-monospace,monospace;">${value}</td></tr>`;
+  }).join('');
+}
+
+// ============================================================================
+// SECTION 9 · TRUSTED
+// ============================================================================
+function renderTrustedByCategory() {
+  const ctx = document.getElementById('trustedByCategoryChart');
+  if (!ctx) return;
+  const data = [...TRUSTED_BY_CAT].sort((a, b) => b.n - a.n);
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: data.map(d => d.cat),
+      datasets:[{
+        label:'Trusted Picks',
+        data: data.map(d => d.n),
+        backgroundColor: data.map((_, i) => PALETTE[i % PALETTE.length]),
+        borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label:c => `${c.parsed} Trusted picks · Leader: ${data[c.dataIndex].top}` } }
+      },
+      scales:{
+        x:{ grid:{ color:C.border }, ticks:{ stepSize:1 } },
+        y:{ grid:{ display:false }, ticks:{ font:{ size:10 } } }
+      }
+    }
+  });
+}
+
+function renderTrustedLeaders() {
+  const el = document.getElementById('trustedLeadersList');
+  if (!el) return;
+  const top5 = [...TRUSTED_BY_CAT].sort((a, b) => b.n - a.n).slice(0, 8);
+  el.innerHTML = top5.map(x => `
+    <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border);">
+      <div style="width:24px; height:24px; border-radius:6px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0;">${x.n}</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:12px; font-weight:800;">${x.cat}</div>
+        <div style="font-size:10.5px; color:var(--muted); line-height:1.3;">${x.top}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================================
+// SECTION 10 · 8 DISCOVERY QUESTIONS
+// ============================================================================
+function renderQuestions() {
+  const el = document.getElementById('questionGrid');
+  if (!el) return;
+  el.innerHTML = QUESTIONS.map((q, i) => `
+    <div class="card" style="padding:16px 18px; display:flex; flex-direction:column;">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:7px;">
-        <span style="width:24px; height:24px; border-radius:7px; background:var(--accent-dim); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800;">Q${i+1}</span>
+        <span style="width:26px; height:26px; border-radius:7px; background:var(--accent-dim); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800;">Q${i+1}</span>
         <span style="font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:var(--surface2); padding:2px 8px; border-radius:999px;">${q.tag}</span>
       </div>
-      <div style="font-size:13px; font-weight:800; color:var(--text); line-height:1.3;">${q.q}</div>
-      <div style="font-size:12px; color:var(--text-2); line-height:1.55; margin-top:6px;">${q.a}</div>
-
-      ${q.evidence?`
-        <div style="display:flex; align-items:center; gap:6px; margin-top:10px; padding-top:8px; border-top:1px dashed var(--border);">
-          <span style="color:var(--accent);">${icon('bulb',13)}</span>
-          <span style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:.02em;">Evidence:</span>
-          <span style="font-size:10.5px; color:var(--text-2);">${q.evidence}</span>
-        </div>`:''}
-
-      ${q.link?`
-        <a href="${q.link.href}" style="display:inline-flex; align-items:center; gap:6px; margin-top:auto; padding-top:10px; text-decoration:none; font-size:11.5px; font-weight:800; color:var(--accent);">
-          ${q.link.label} ${icon('arrow',13,2.5)}
-        </a>`:''}
-    </div>`).join('');
+      <div style="font-size:13.5px; font-weight:800; line-height:1.3;">${q.q}</div>
+      <div style="font-size:12.5px; color:var(--text-2); line-height:1.55; margin-top:6px;">${q.a}</div>
+      ${q.evidence ? `<div style="display:flex; align-items:center; gap:6px; margin-top:10px; padding-top:8px; border-top:1px dashed var(--border);">
+        <span style="color:var(--accent);">💡</span>
+        <span style="font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:.02em;">Evidence:</span>
+        <span style="font-size:10.5px; color:var(--text-2);">${q.evidence}</span>
+      </div>` : ''}
+      ${q.link ? `<a href="${q.link.href}" style="display:inline-flex; align-items:center; gap:5px; margin-top:auto; padding-top:10px; font-size:11.5px; font-weight:800; color:var(--accent);">${q.link.label}</a>` : ''}
+    </div>
+  `).join('');
 }
 
 // ============================================================================
-// INSIGHT VALIDATION
+// PIPELINE ARCHITECTURE MODAL
 // ============================================================================
-function renderValidation(){
-  document.getElementById('methodCard').innerHTML =
-    `<div style="font-size:12.5px; font-weight:700; color:var(--text-2); margin-bottom:12px;">Quality-control workflow</div>` +
-    METHOD.map((m,i)=>`
-      <div style="display:flex; gap:11px; ${i>0?'margin-top:12px;':''}">
-        <div style="width:26px; height:26px; border-radius:7px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0;">${m.n}</div>
-        <div><div style="font-size:12.5px; font-weight:800;">${m.t}</div><div style="font-size:11px; color:var(--muted); line-height:1.4;">${m.d}</div></div>
-      </div>`).join('');
-
-  const head = `<thead><tr style="text-align:left; color:var(--muted); font-size:10px; letter-spacing:.03em; text-transform:uppercase; border-bottom:1px solid var(--border);">
-    <th style="padding:9px 16px; font-weight:700;">Outcome</th><th style="padding:9px 12px; font-weight:700;">Corpus hypothesis</th><th style="padding:9px 16px; font-weight:700;">Primary-research verdict</th></tr></thead>`;
-  const rows = HYPOTHESES.map(r=>`<tr style="border-bottom:1px solid var(--border);">
-    <td style="padding:11px 16px;"><span style="font-size:10px; font-weight:800; color:#0F172A; background:${r.color}; padding:3px 9px; border-radius:999px; white-space:nowrap;">${r.tag}</span></td>
-    <td style="padding:11px 12px; font-weight:600; color:var(--text);">${r.h}</td>
-    <td style="padding:11px 16px; color:var(--text-2); font-size:12px;">${r.o}</td></tr>`).join('');
-  document.getElementById('validationTable').innerHTML = head + '<tbody>' + rows + '</tbody>';
-}
-
-// ============================================================================
-// FRICTION HEATMAP · STRATEGY · BRIDGE · PIPELINE (kept)
-// ============================================================================
-function renderClusters(){
-  document.getElementById('clusterCard').innerHTML = CLUSTERS.map((c,i)=>`
-    <div style="${i>0?'margin-top:16px;':''}">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="width:26px; height:26px; border-radius:7px; background:${c.color}22; color:${c.color}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">${i+1}</span>
-          <span style="font-size:14px; font-weight:800;">${c.name}</span></div>
-        <span style="font-size:15px; font-weight:800; color:${c.color}; font-variant-numeric:tabular-nums;">${c.pct}%</span></div>
-      <div style="height:7px; background:var(--raise); border-radius:999px; overflow:hidden;"><div style="width:${c.pct}%; height:100%; background:${c.color}; border-radius:999px;"></div></div>
-      <div style="display:flex; gap:7px; margin-top:8px; padding:9px 11px; background:var(--raise); border:1px solid var(--border); border-radius:10px;">
-        <span style="color:${c.color}; flex-shrink:0;">${icon('quote',14)}</span>
-        <span style="font-size:12px; font-style:italic; color:var(--text-2); line-height:1.45;">${c.quote}</span></div>
-    </div>`).join('');
-  const ctx=document.getElementById('clusterChart').getContext('2d');
-  new Chart(ctx,{ type:'doughnut',
-    data:{ labels:CLUSTERS.map(c=>c.name), datasets:[{ data:CLUSTERS.map(c=>c.pct), backgroundColor:CLUSTERS.map(c=>c.color), borderColor:'#1E293B', borderWidth:3 }] },
-    options:{ cutout:'62%', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom', labels:{ color:C.text2, boxWidth:8, boxHeight:8, padding:12, usePointStyle:true, font:{size:11} } }, tooltip:{ callbacks:{ label:c=>`${c.label}: ${c.parsed}% of neg. reviews` } } } } });
-}
-function renderStrategy(){
-  document.getElementById('pmStrategy').innerHTML=`
-    <div class="card" style="padding:16px 18px; background:linear-gradient(135deg, rgba(242,201,76,0.14), rgba(16,185,129,0.10)); border:1px solid rgba(242,201,76,0.35); display:flex; align-items:center; gap:14px;">
-      <div style="width:42px; height:42px; border-radius:11px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${icon('bulb',22)}</div>
-      <div><div style="font-size:10.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin-bottom:3px;">PM Strategy Derived</div>
-      <div style="font-size:14.5px; font-weight:700; color:var(--text); line-height:1.4;">Launch Micro-Trial SKUs (10ml @ ₹15–₹29) with a 100% Instant-Refund Guarantee — directly dissolving the Size, Price &amp; Return friction clusters above.</div></div>
-    </div>`;
-}
-function renderBridge(){
-  document.getElementById('bridge').innerHTML=`
-    <div class="card" style="padding:22px 24px; background:linear-gradient(120deg, #111827 0%, #1E293B 55%, #172033 100%); border:1px solid var(--border-2); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
-      <div style="display:flex; align-items:center; gap:15px;">
-        <div style="width:50px; height:50px; border-radius:13px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${icon('rocket',26)}</div>
-        <div><div style="font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin-bottom:3px;">From Insight to Execution</div>
-          <div style="font-size:17px; font-weight:800; line-height:1.25;">Test the AI-Powered Trial &amp; Confidence Engine <span style="color:var(--muted); font-weight:600; font-size:13px;">· Part 4 MVP</span></div>
-          <div style="font-size:12.5px; color:var(--text-2); margin-top:4px;">The friction clusters above, shipped as a live micro-trial nudge with refund &amp; return badges.</div></div>
-      </div>
-      <a href="${PROTO}/prototype/trial-engine.html" target="_blank" rel="noopener" style="background:var(--accent); color:#0F172A; font-size:14px; font-weight:800; padding:14px 22px; border-radius:12px; display:flex; align-items:center; gap:9px; white-space:nowrap;">Launch Live Prototype App ${icon('arrow',17,2.5)}</a>
-    </div>`;
-}
-function renderPipeline(){
-  document.getElementById('pipelineFlow').innerHTML = PIPELINE.map((p,i)=>`
-    <div style="flex:1; display:flex; align-items:center;">
-      <div style="flex:1; background:var(--raise); border:1px solid var(--border); border-radius:14px; padding:16px 15px; min-height:184px; display:flex; flex-direction:column;">
-        <div style="width:40px; height:40px; border-radius:10px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; margin-bottom:11px;">${icon(p.icon,22)}</div>
-        <div style="font-size:10px; font-weight:800; color:var(--accent); letter-spacing:.03em;">STEP ${i+1}</div>
-        <div style="font-size:13.5px; font-weight:800; margin:3px 0 6px; line-height:1.2;">${p.t}</div>
-        <div style="font-size:11px; color:var(--muted); line-height:1.45; flex:1;">${p.b}</div>
-        <div style="font-size:10px; font-weight:700; color:#0F172A; background:var(--accent); align-self:flex-start; padding:2px 9px; border-radius:999px; margin-top:9px;">${p.tag}</div>
-      </div>
-      ${i<PIPELINE.length-1?`<span class="arrow" style="color:var(--faint); padding:0 4px;">${icon('arrow',24,2)}</span>`:''}
-    </div>`).join('');
-}
-function openArchModal(){ renderPipeline(); document.getElementById('archModal').classList.add('open'); }
-function closeArchModal(){ document.getElementById('archModal').classList.remove('open'); }
-document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeArchModal(); });
-
-async function pingProto(){
-  const el=document.getElementById('connBadge');
-  try{ await fetch(PROTO+'/data/dashboard_metrics.json',{signal:AbortSignal.timeout(5000),cache:'no-store'});
-    el.innerHTML=`<span style="color:${C.emerald};">●</span> Live prototype connected`; el.style.color=C.emerald;
-  }catch(e){ el.innerHTML=`<span style="color:${C.amber};">●</span> Prototype offline`; el.style.color=C.muted; }
-}
-
-function buildDataFacts(){
-  const k=KPIS.map(x=>`${x.label.replace(/&amp;/g,'&')}: ${x.value.replace(/&lt;/g,'<')}`).join('; ');
-  const cl=CLUSTERS.map(c=>`${c.name} ${c.pct}%`).join('; ');
-  const trustedTotal = TRUSTED_PICKS.reduce((s,x)=>s+x.n,0);
-  const trustedTop = TRUSTED_PICKS.slice(0,5).map(x=>`${CATEGORY_DISPLAY[x.cat]||x.cat} (${x.n})`).join(', ');
-  return `EXECUTIVE KPIs: ${k}
-FRICTION CLUSTERS (share of negative reviews): ${cl}
-PM STRATEGY: micro-trial SKUs 10ml @ ₹15–₹29 + instant refund + one-tap return.
-EVIDENCE BASE (PM analysis): 5,420 public reviews (Play Store, App Store, Reddit, PissedConsumer, YouTube, HackerNews) + 7 in-depth interviews.
-IN-APP REVIEWS (shipped social-proof layer): 194,986 reviews across 1,150 SKUs (avg 170/product), working-professional voice, per-category files lazy-loaded on PDP open.
-BLINKIT TRUSTED PROGRAM (shipped, Amazon's-Choice/Flipkart-Assured analog): ${trustedTotal} curated products (8.3% of catalog). Selection rule: avg_rating>=4.3 AND total_ratings>=500 AND repeat_purchase_pct>=55%, topped up to 3/category by composite score. Category leaders: ${trustedTop}, plus 18 more categories.
-TARGET AUDIENCE: working professionals (25-40, SDEs/PMs/consultants). Homepage hero: "Built for busy work weeks." Personas: Rohan (SDE, Bengaluru), Priya (PM, Gurugram), Ankit (Consultant, Mumbai PG).
-SORT ORDER (product grid): Trusted first, then within tier by rating × log(ratings) × repeat_purchase.
-LIVE URLS: prototype https://blinkit-trial-confidence-layer.vercel.app, dashboard https://blinkit-pm-dashboard.vercel.app`;
-}
-
-// ---- BLINKIT TRUSTED PROGRAM SECTION ----
-function renderTrustedProgram(){
-  const el = document.getElementById('trustedSection');
+function renderPipelineArchDetail() {
+  const el = document.getElementById('pipelineArchDetail');
   if (!el) return;
-  const total = TRUSTED_PICKS.reduce((s,x)=>s+x.n,0);
-  const rows = TRUSTED_PICKS.map(x=>`
-    <tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:8px 12px; font-size:12.5px;">${CATEGORY_DISPLAY[x.cat]||x.cat}</td>
-      <td style="padding:8px 12px; text-align:center; font-family:monospace; font-weight:800; color:${C.accent};">${x.n}</td>
-      <td style="padding:8px 12px; font-size:12px; color:var(--text-2);">${x.top}</td>
-    </tr>`).join('');
   el.innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="width:34px; height:34px; border-radius:9px; background:${C.accent}22; display:flex; align-items:center; justify-content:center; color:${C.accent};">${icon('verify',20,2.4)}</span>
-        <h2 style="margin:0; font-size:20px; font-weight:800;">Blinkit Trusted Program</h2>
-      </div>
-      <span style="font-size:11.5px; color:var(--muted); font-family:monospace;">Amazon's-Choice / Flipkart-Assured analog · rule-based</span>
+    <div style="font-size:13px; color:var(--text-2); line-height:1.6; margin-bottom:14px;">
+      One AI-native pipeline, deployed to production and lazy-loaded per category on the live prototype. All 4 assignment parts flow through it:
     </div>
-
-    <div class="grid g4" style="grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; margin-bottom:16px;">
-      <div class="card" style="padding:14px;">
-        <div style="font-size:26px; font-weight:800; color:${C.accent};">${total}</div>
-        <div style="font-size:11.5px; font-weight:700; color:var(--text-2); margin-top:4px;">Trusted Picks (of 1,150)</div>
-        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">8.3% of catalog · every category ≥3</div>
-      </div>
-      <div class="card" style="padding:14px;">
-        <div style="font-size:26px; font-weight:800; color:var(--text);">88</div>
-        <div style="font-size:11.5px; font-weight:700; color:var(--text-2); margin-top:4px;">Cleared the strict rule</div>
-        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">rating≥4.3 · ratings≥500 · repeat≥55%</div>
-      </div>
-      <div class="card" style="padding:14px;">
-        <div style="font-size:26px; font-weight:800; color:var(--text);">8</div>
-        <div style="font-size:11.5px; font-weight:700; color:var(--text-2); margin-top:4px;">Top-up (category floor)</div>
-        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">composite-score top-3 per category</div>
-      </div>
-      <div class="card" style="padding:14px;">
-        <div style="font-size:26px; font-weight:800; color:${C.emerald};">23/23</div>
-        <div style="font-size:11.5px; font-weight:700; color:var(--text-2); margin-top:4px;">Categories with a Trusted pick</div>
-        <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">no empty category — full coverage</div>
-      </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      ${PIPELINE.map(p => `
+        <div style="display:flex; gap:12px; padding:12px 14px; background:var(--raise); border:1px solid var(--border); border-radius:11px;">
+          <div style="width:36px; height:36px; border-radius:9px; background:var(--accent); color:#0F172A; display:flex; align-items:center; justify-content:center; font-size:18px;">${p.icon}</div>
+          <div>
+            <div style="font-size:12.5px; font-weight:800;">STEP ${p.n} · ${p.t}</div>
+            <div style="font-size:12px; color:var(--text-2); line-height:1.45; margin-top:2px;">${p.b}</div>
+          </div>
+        </div>
+      `).join('')}
     </div>
-
-    <div class="card" style="padding:0; overflow:hidden;">
-      <div style="padding:12px 16px; background:var(--raise); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
-        <span style="font-size:13px; font-weight:800;">Per-category coverage & category leader</span>
-        <span style="font-size:10.5px; color:var(--muted); font-family:monospace;">source: mark_trusted_picks.py</span>
-      </div>
-      <div style="max-height:340px; overflow-y:auto;">
-        <table style="width:100%; border-collapse:collapse; font-size:13px;">
-          <thead><tr style="text-align:left; background:var(--raise); position:sticky; top:0;">
-            <th style="padding:8px 12px; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:700;">Category</th>
-            <th style="padding:8px 12px; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:700; text-align:center;">Picks</th>
-            <th style="padding:8px 12px; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:700;">Category Leader</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    </div>
-
-    <div style="margin-top:14px; background:var(--accent-dim); border:1px solid rgba(242,201,76,0.3); border-radius:11px; padding:12px 14px;">
-      <div style="display:flex; align-items:center; gap:7px; margin-bottom:5px;">
-        <span style="color:var(--accent);">${icon('bulb',15)}</span>
-        <span style="font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--accent);">Why this works</span>
-      </div>
-      <div style="font-size:12.5px; color:var(--text); line-height:1.5;">
-        A rule-based badge is the honest counter to Pattern B (users reject platform-generated suggestions but do trust <b>credible peer evidence</b>). Every Trusted badge shows its reason ("4.9★ from 1,475+ ratings · 58% reorder rate") — the reason IS the trust signal. No paid placement, no black-box ranking.
-      </div>
+    <div style="margin-top:14px; padding:12px 14px; background:var(--accent-dim); border:1px solid rgba(242,201,76,0.3); border-radius:11px;">
+      <div style="font-size:11px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:.05em;">Architectural principles</div>
+      <ul style="font-size:12px; color:var(--text-2); line-height:1.5; margin:6px 0 0 18px; padding:0;">
+        <li>Core grocery flow is architecturally ISOLATED — zero dependency on the Trial layer</li>
+        <li>Trust signals are RAG-only — no LLM ever fabricates a rating or a quote</li>
+        <li>Confidence threshold gates AI signals; low-confidence routes to static defaults</li>
+        <li>Diversity monitor prevents the "narrowing feedback loop"</li>
+        <li>Gemini-primary / Groq-fallback so a provider outage never hard-crashes</li>
+      </ul>
     </div>`;
 }
+function openArchModal() { renderPipelineArchDetail(); document.getElementById('archModal').classList.add('open'); }
+function closeArchModal() { document.getElementById('archModal').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeArchModal(); });
 
-function init(){
-  renderStaticIcons();
-  renderKpis();
-  renderTrustedProgram();
+// ============================================================================
+// NAV ACTIVE-LINK + LIVE-PROTOTYPE PING
+// ============================================================================
+async function pingProto() {
+  const el = document.getElementById('connBadge');
+  try {
+    await fetch(PROTO + '/data/dashboard_metrics.json', { signal:AbortSignal.timeout(5000), cache:'no-store' });
+    el.innerHTML = `<span style="color:${C.emerald};">●</span> Live prototype connected`;
+    el.style.color = C.emerald;
+  } catch (e) {
+    el.innerHTML = `<span style="color:${C.amber};">●</span> Prototype offline`;
+    el.style.color = C.muted;
+  }
+}
+
+function initNavActive() {
+  const links = document.querySelectorAll('.sidebar .navlink');
+  const sections = Array.from(links).map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+  const setActive = () => {
+    let current = null;
+    const scrollY = window.scrollY + 100;
+    sections.forEach(s => { if (s.offsetTop <= scrollY) current = s.id; });
+    links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current));
+  };
+  window.addEventListener('scroll', setActive, { passive:true });
+  setActive();
+}
+
+// ============================================================================
+// CONTEXT FOR CHATBOT (buildDataFacts) — pm-chatbot.js calls this
+// ============================================================================
+function buildDataFacts() {
+  const kpi = SNAPSHOT_KPIS.map(k => `${k.label}: ${k.value} (${k.sub})`).join('; ');
+  const clusters = CLUSTERS.filter(c => c.name !== 'Other').map(c => `${c.name} ${c.pct}%`).join('; ');
+  const trustedTotal = TRUSTED_BY_CAT.reduce((s, x) => s + x.n, 0);
+  return `EXECUTIVE KPIs: ${kpi}
+FRICTION CLUSTERS (share of negative reviews): ${clusters}
+CORPUS EVIDENCE: 32,999 items ingested (YouTube 18,941, PissedConsumer 7,925, Reddit 3,268, Play Store 2,367, HackerNews 323, App Store 175), of which 5,420 were discovery-relevant. Only 8.0% carry any category signal. Grocery+snacks (1,773) outweigh ALL non-grocery combined (1,011) by 1.75x.
+INTERVIEWS: 7 in-depth (R1-R7). Patterns A-E: A=first-experience determinism, B=peer proof over algo, C=fees tax small trials, D=locked-in specialist models, E=discovery bypass.
+HYPOTHESIS SCORECARD: Validated (non-grocery trials fail terminally), Rejected (awareness gap), Challenged (refund friction is symptom, not cause), Partial (price alone).
+IN-APP CATALOG: 1,150 SKUs across 23 L2 categories, 204,562 subcategory-specific reviews (avg 178/product).
+BLINKIT TRUSTED PROGRAM: ${trustedTotal} curated picks (8.3%). Rule: avg>=4.3 AND ratings>=500 AND repeat>=55%, topped up to 3/category by composite score. Every category (23/23) covered.
+TARGET AUDIENCE: Habituated Grocery Regular (>=1x/week, >=3-mo tenure), retargeted to working professionals 25-40 (SDEs, PMs, consultants) — Rohan, Priya, Ankit personas in the live MVP.
+LIVE URLS: prototype ${PROTO}, dashboard https://blinkit-pm-dashboard.vercel.app`;
+}
+
+// ============================================================================
+// INIT
+// ============================================================================
+function init() {
+  // Section 1
+  renderSnapshotKpis();
+  renderCcarLine();
+  renderCategoryShareDonut();
+  // Section 2 (Part 1)
+  renderPipeline();
+  renderSourcesBar();
+  renderCategoryCoverage();
+  renderComplaintTypology();
+  // Section 3 (Insights)
+  renderClusterBars();
+  renderClusterDonut();
+  renderSentimentDonut();
+  renderDensityHeatmap();
+  // Section 4 (Live workflow)
   loadSampleReviews();
+  // Section 5 (Part 2)
+  renderInterviewees();
+  renderPatterns();
+  // Section 6 (Validation)
+  renderMethod();
+  renderHypotheses();
+  // Section 7 (Part 3)
+  renderProblemCanvas();
+  renderRootCauseLoop();
+  renderImpactSizingTable();
+  // Section 9 (Trusted)
+  renderTrustedByCategory();
+  renderTrustedLeaders();
+  // Section 10 (Questions)
   renderQuestions();
-  renderClusters();
-  renderStrategy();
-  renderValidation();
-  renderBridge();
+  // Nav + ping
+  initNavActive();
   pingProto();
 }
 document.addEventListener('DOMContentLoaded', init);
