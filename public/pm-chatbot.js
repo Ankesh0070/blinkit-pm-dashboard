@@ -47,13 +47,37 @@ function pmSanitize(s) {
 }
 function pmMarkupToHtml(raw) {
   let html = pmSanitize(raw);
-  // [label](#anchor) → clickable in-page link with underline + accent color.
-  // Anchors must be ASCII word chars only, no scripts.
-  html = html.replace(/\[([^\]]{1,80})\]\(#([a-zA-Z][\w-]{0,30})\)/g,
+
+  // [label](#anchor) → clickable in-page link
+  html = html.replace(/\[([^\]]{1,120})\]\(#([a-zA-Z][\w-]{0,30})\)/g,
     (_, label, anchor) => `<a href="#${anchor}" onclick="pmScrollAndClose('${anchor}')" style="color:${PMC.accent}; font-weight:800; text-decoration:underline; text-underline-offset:2px;">${label}</a>`);
-  // **bold** for emphasis.
-  html = html.replace(/\*\*([^*]{1,80})\*\*/g, '<b>$1</b>');
-  return html;
+
+  // **bold** and *italic*
+  html = html.replace(/\*\*([^*]{1,120})\*\*/g, '<b>$1</b>');
+  html = html.replace(/(^|\W)\*([^*\n]{1,80})\*(?=\W|$)/g, '$1<i>$2</i>');
+
+  // Convert markdown bullet lines starting with "- " or "* " into <ul><li>.
+  // Split into logical blocks (paragraphs) separated by blank lines, then
+  // detect and wrap contiguous bullet runs into a list.
+  const blocks = html.split(/\n{2,}/);
+  const out = blocks.map(block => {
+    const lines = block.split(/\n/).map(l => l.trim()).filter(l => l.length);
+    if (!lines.length) return '';
+    // A block is a bullet list only if MOST lines start with a bullet marker.
+    const bulletLines = lines.filter(l => /^[-*]\s+/.test(l));
+    if (bulletLines.length >= Math.max(2, Math.ceil(lines.length * 0.6))) {
+      const items = bulletLines.map(l =>
+        `<li style="margin:5px 0; line-height:1.5;">${l.replace(/^[-*]\s+/, '')}</li>`
+      ).join('');
+      const preface = lines.filter(l => !/^[-*]\s+/.test(l)).join('<br>');
+      return (preface ? `<div>${preface}</div>` : '') +
+        `<ul style="margin:6px 0 6px 20px; padding:0; list-style:disc;">${items}</ul>`;
+    }
+    // Otherwise treat as a paragraph, preserving single line breaks as <br>.
+    return `<p style="margin:6px 0; line-height:1.55;">${lines.join('<br>')}</p>`;
+  }).join('');
+
+  return out || html;
 }
 function pmScrollAndClose(anchor) {
   const el = document.getElementById(anchor);
@@ -66,7 +90,8 @@ function appendPmMessage(role, content) {
   const md = document.getElementById('pmChatMessages');
   const div = document.createElement('div');
   const user = role === 'user';
-  div.style.cssText = `align-self:${user?'flex-end':'flex-start'}; max-width:90%; padding:12px; border-radius:${user?'14px 14px 4px 14px':'14px 14px 14px 4px'}; font-size:13px; line-height:1.5; white-space:pre-wrap; border:1px solid ${PMC.border}; background:${user?'rgba(242,201,76,0.14)':PMC.bg}; color:${PMC.ink};`;
+  const wsRule = user ? 'white-space:pre-wrap;' : '';
+  div.style.cssText = `align-self:${user?'flex-end':'flex-start'}; max-width:92%; padding:12px 14px; border-radius:${user?'14px 14px 4px 14px':'14px 14px 14px 4px'}; font-size:13px; line-height:1.5; ${wsRule} border:1px solid ${PMC.border}; background:${user?'rgba(242,201,76,0.14)':PMC.bg}; color:${PMC.ink};`;
   if (user) div.textContent = content;
   else      div.innerHTML   = pmMarkupToHtml(content);
   md.appendChild(div); md.scrollTop = md.scrollHeight;

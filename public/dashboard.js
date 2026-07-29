@@ -967,8 +967,6 @@ function init() {
   // Section 9 (Trusted)
   renderTrustedByCategory();
   renderTrustedLeaders();
-  // Section 10 (Questions)
-  renderQuestions();
   // Nav + ping
   initNavActive();
   pingProto();
